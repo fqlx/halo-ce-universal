@@ -1,60 +1,90 @@
 {
-  "source_commit": "1cdb4b315921d33600ec34e8b5db72d128a52cbc",
-  "game_data_included": false,
+  "source_commit": "f43a7a37c279a6ef57551d4bc01e88ce57f8d54a",
+  "source_dirty": false,
+  "runtime": "source-built Emscripten 6.0.10",
+  "native_network_version": 4,
+  "relay_configured": false,
+  "game_assets_included": false,
   "files": {
     ".nojekyll": {
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
-    "auto-cache.js": {
-      "bytes": 9711,
-      "sha256": "6ffaba669012738eb813fa870bb3b22c9f99386d6c393433cfcb98dfb9620f07"
+    "app.js": {
+      "bytes": 34625,
+      "sha256": "e5810dc6ffd6d3404d2dc5f544cbe1da393cc9ee6aef1c57a024d99467df0f96"
     },
-    "download-provenance.json": {
-      "bytes": 3064,
-      "sha256": "d7b20f0059e6da8ccfd27f51d9cde195b142c9978c83affcc30664bfeca4357e"
+    "audio-worklet.js": {
+      "bytes": 2692,
+      "sha256": "89ea63d7b2e39cf2f2b995c781b9879e2caf2d95249e4bfe44ee856341388e49"
     },
-    "halo-asyncify.js": {
-      "bytes": 219754,
-      "sha256": "f082f25e3bba34a1d8f67716feb59071f6f02a110da183b9c83d8d2ae9bb2c15"
+    "cache.js": {
+      "bytes": 14071,
+      "sha256": "50a2c51af8ebf7b00b67d46e556cb7b1ffb3c3ecf0ac2b634e844ad0a3b1fece"
     },
-    "halo-asyncify.wasm": {
-      "bytes": 4009123,
-      "sha256": "77edefd9f55f564d69e9b16491a11ab173c6123f830663873a5cbe877a745696"
+    "gateway.js": {
+      "bytes": 7535,
+      "sha256": "55cdce70a7c181b15164ff1854aa4d8bddaf00adce041a5e520dda78c9fd2d12"
     },
     "halo.js": {
-      "bytes": 213946,
-      "sha256": "aeafc73007497ab44c0f2293824203ec281335edd0cf7275933443588bfc5bba"
+      "bytes": 119211,
+      "sha256": "0ebaabe065572feb8ae803898de9424f852870967c20cf8ccacadb7534b322b2"
     },
     "halo.wasm": {
-      "bytes": 2828672,
-      "sha256": "aad4a196055760d5f082bf2af8580956325d513e4d51bc07fe8ab8f8de9cd636"
+      "bytes": 3011603,
+      "sha256": "35c847cada39d3418dec12cc54704a2744bc839e89b50ea3340d7b644930e81a"
+    },
+    "icons/icon-180.png": {
+      "bytes": 9214,
+      "sha256": "e05eb6fdb323be2ba3ff9d98558f2826106e0b73cf7af86122c11465e74b30f9"
+    },
+    "icons/icon-192.png": {
+      "bytes": 10139,
+      "sha256": "0ac2ce4db8323671c7f807f32e786ce1ae83cbcf44d24ffb22e12502113fb798"
+    },
+    "icons/icon-512.png": {
+      "bytes": 33806,
+      "sha256": "e9b11b21da4105a1eb8bd2ae88a80505800b3d0240bbfb962c587d44e1ab25c0"
     },
     "index.html": {
-      "bytes": 10765,
-      "sha256": "0dde28b1ce8b365d4fc7c1a4900e5f1d8965921d1eb93d6ccbf4c0666606ca6a"
+      "bytes": 7910,
+      "sha256": "82ffdfc59d12c67fb565433b7604142990da061ada9dda7bda9e6004ff994ccb"
     },
-    "launcher.js": {
-      "bytes": 32451,
-      "sha256": "74ebf643beb7bc8ef0219c5d65cd680ab9945b726e11b65699dfd8f848d46bdf"
+    "input.js": {
+      "bytes": 17821,
+      "sha256": "2b0df07fd7603e3fe724fd00faf3367cc2fb612a2868c525045c1ffd2abba4fc"
     },
-    "opaque-canvas.js": {
-      "bytes": 558,
-      "sha256": "d1fca053258733dfbbbdccd20ad484b51713e0504e91b1ca6cdd48c9d0aa27bf"
+    "manifest.webmanifest": {
+      "bytes": 592,
+      "sha256": "e3bfaa046b33e6c81a71df06f6f53bbd55bc722845fd63b972ee0d7093113e38"
     },
-    "performance.js": {
-      "bytes": 3157,
-      "sha256": "43922eb573fc25e1db9d870f362dcdaf1c3f9d2381e7885d217d4b332f746670"
+    "native-invite.js": {
+      "bytes": 1251,
+      "sha256": "c8aa5f1a99a01dc63e31f90f7ccbdc575558e612ec618976ed464bd3e2a92143"
     },
-    "stream-batch.js": {
-      "bytes": 16031,
-      "sha256": "98367d7fa6e287e41417a8df9e45f57400566199784375a438f0c62c474c80bc"
+    "net.js": {
+      "bytes": 20271,
+      "sha256": "58eaa9694ea6f58bc8a40a2224072fe0b9b1b3985e6c70de1d8c0093f3631994"
+    },
+    "site-config.js": {
+      "bytes": 62,
+      "sha256": "407c03f72cd73f0eb7c0229f76d75853a2709fc423d9a75301b03a8fb06c86f4"
+    },
+    "style.css": {
+      "bytes": 13752,
+      "sha256": "32ababaa6f4103cdcb65487a98da229548507c308fb54236ae7848b29706520a"
     },
     "sw.js": {
-      "bytes": 1485,
-      "sha256": "1b3d773d5f575cc45276d1b9aeefa6b62106023059457c6c8c31a2d87ef49430"
+      "bytes": 4582,
+      "sha256": "763c7fe52e6021489eca5832634bb0ba638b0d7c4e3bda4e62981163c53d1ffd"
+    },
+    "version.json": {
+      "bytes": 31,
+      "sha256": "6caf71749f32e090d7e651676183fb70854af2ecd22986be65f7fa5084e3ccaf"
+    },
+    "xiso-worker.js": {
+      "bytes": 7317,
+      "sha256": "20eed9ac6352d1bd9e37111fda1a72cb9127ed88c39bf7438d2139041e6c9305"
     }
-  },
-  "source_repository": "https://github.com/fqlx/halo-ce-universal",
-  "data_source": "https://raw.githubusercontent.com/fqlx/halo-ce-universal/fc2a0301d8ddd48f8585d3dd53a680964bde0f63/"
+  }
 }
