@@ -1,5 +1,5 @@
 {
-  "source_commit": "64813ac0c4d312c56ef5bd023b01617bead771d4",
+  "source_commit": "7e66a8469fe1079410a7bc6fe151a576595ea53b",
   "source_dirty": false,
   "runtime": "source-built Emscripten 6.0.10",
   "native_network_version": 4,
@@ -48,8 +48,8 @@
       "sha256": "e9b11b21da4105a1eb8bd2ae88a80505800b3d0240bbfb962c587d44e1ab25c0"
     },
     "index.html": {
-      "bytes": 10397,
-      "sha256": "1e50bacf2862b37c7cb7c361cb93e29d49909969848f855145597d6f7cf43453"
+      "bytes": 10773,
+      "sha256": "6da4c93ff55a1db18937876821c3c2b4a9c78f59ab5323998c554ed36739dedb"
     },
     "input.js": {
       "bytes": 18055,
@@ -81,13 +81,11 @@
     },
     "version.json": {
       "bytes": 31,
-      "sha256": "7bb16616660b10f6ebb5a603ce379669b54617dcda7ef0ae41551aab1207b148"
+      "sha256": "b9977c55f980d0e6ed6f0bfe8bcf37a51ea84770dca396efe21739162e2277dc"
     },
     "xiso-worker.js": {
       "bytes": 7292,
       "sha256": "f8433e6310dbbe5e44343e589ed77a661af98bfa02da7fdba533ea881cc142b7"
     }
-  },
-  "launcher_update": "Automatically attempt audio; unlock on normal gameplay input; remove enable button and popup",
-  "launcher_source_commit": "e06c962"
+  }
 }
