@@ -44,7 +44,8 @@
     "FPS display",
     "Removed itch.io host script",
     "Publisher credit and guide link",
-    "Static hosting title and attribution"
+    "Static hosting title and attribution",
+    "Automatic map caching with integrity checks and retry"
   ],
   "local_files": {
     "opaque-canvas.js": {
@@ -58,6 +59,10 @@
     "performance.js": {
       "bytes": 3157,
       "sha256": "43922eb573fc25e1db9d870f362dcdaf1c3f9d2381e7885d217d4b332f746670"
+    },
+    "auto-cache.js": {
+      "bytes": 7045,
+      "sha256": "d76d6d61e11f451d8a3f4ef5699ad40fa13f97e8ff8dc06ed76d97c180040d2a"
     }
   },
   "installed_engine": {
@@ -66,6 +71,7 @@
     "halo-asyncify.js": "f082f25e3bba34a1d8f67716feb59071f6f02a110da183b9c83d8d2ae9bb2c15",
     "halo-asyncify.wasm": "77edefd9f55f564d69e9b16491a11ab173c6123f830663873a5cbe877a745696"
   },
-  "local_index_sha256": "9572bfc7c3b99fffe6c188498b132fe52ecfa79b86a5c2b58ec0068c14174dd9",
-  "opaque_canvas_sha256": "d1fca053258733dfbbbdccd20ad484b51713e0504e91b1ca6cdd48c9d0aa27bf"
+  "local_index_sha256": "9cec242d636325fbb28c0176cd277b6b2f47eb7240e1ef1fc7c5f57582f831bf",
+  "opaque_canvas_sha256": "d1fca053258733dfbbbdccd20ad484b51713e0504e91b1ca6cdd48c9d0aa27bf",
+  "local_launcher_sha256": "7163fc29e58b8c5ea364f6821b5922b9ef9305cc5b8940806dcf5e50bb646b9b"
 }

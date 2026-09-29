@@ -153,10 +153,11 @@
 	}
 
 	// one map into storage, in the manifest only once its copy is complete
-	async function storeMap(manifest, name, source, size, onProgress) {
+	async function storeMap(manifest, name, source, size, onProgress, verify) {
 		delete manifest[name];
 		await writeManifest(manifest);
 		await writeFile([...DATA_DIRECTORY, "maps", name], source, size, onProgress);
+		if (verify) await verify();
 		manifest[name] = size;
 		await writeManifest(manifest);
 	}
@@ -845,6 +846,16 @@
 			setStatus("This browser cannot run the game: open this page in Google Chrome or Microsoft Edge, on a computer. (It lacks " + missing.join(", ") + ".)", "error");
 			return;
 		}
+		if (!parameters.get("data") && !parameters.has("manual")) {
+            const ready = await window.haloAutoCache({
+                base: document.querySelector('meta[name="halo-data-source"]').content,
+                elements, storedMaps, mapProblems, directory, currentManifest, storeMap,
+                canGrowBy, folderBytes, storageMessage, withGameLock, formatBytes,
+                setStatus, refreshMaps, expectedMaps: EXPECTED_MAPS, cacheBytes: GAME_CACHE_BYTES,
+                setBusy: value => { busy = value; },
+            });
+            if (!ready) return;
+        }
 		if (parameters.get("data")) {
 			try {
 				await importFromServer(parameters.get("data"));
