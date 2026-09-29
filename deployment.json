@@ -1,6 +1,6 @@
 {
-  "source_commit": "fd30ebe3f6a1713559a105d79940d38ac770068b",
-  "source_dirty": false,
+  "source_commit": "a7e07f69283674c43fe2b1ef36796c200674be5b",
+  "source_dirty": true,
   "runtime": "source-built Emscripten 6.0.10",
   "native_network_version": 4,
   "relay_configured": false,
@@ -12,8 +12,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "app.js": {
-      "bytes": 52185,
-      "sha256": "0e333c60ad419fb56ded63edf8904bcafee69b6b69a942c1551fabcbf7f36de5"
+      "bytes": 52944,
+      "sha256": "068e74f5ac2dc0f67d2cbec19ad564c562f4c57ec52f71a08f7b728b8cb8c33c"
     },
     "audio-worklet.js": {
       "bytes": 2692,
@@ -28,12 +28,12 @@
       "sha256": "0ede373ed1b32dc4b4c0646c70aa96d8546a6cc82732f16a5a018e6ba02e5139"
     },
     "halo.js": {
-      "bytes": 130949,
-      "sha256": "8d26c342ced7da28b8676c419343af7ebe748a1a5bfe7c485e0faef333cd727e"
+      "bytes": 132669,
+      "sha256": "57aa3aa62bfa182d3ebf95c2bbc7f0c0e3563df8f3e4eb27fc8474db8a1b3b6e"
     },
     "halo.wasm": {
-      "bytes": 3022145,
-      "sha256": "9527e41632cd6809eb55a5deffd0b51df55b62c4158c6ee95e845dde74a4a2d7"
+      "bytes": 3023259,
+      "sha256": "bb672583bc6ebb000bb1d6715137da0167cd243cac7612460f5a95877ce49a2b"
     },
     "icons/icon-180.png": {
       "bytes": 9214,
@@ -64,8 +64,8 @@
       "sha256": "c8aa5f1a99a01dc63e31f90f7ccbdc575558e612ec618976ed464bd3e2a92143"
     },
     "net.js": {
-      "bytes": 34217,
-      "sha256": "7e6070f90677683795e400ed88047e5282da22ca7cc4c4c45b422f94e7e81860"
+      "bytes": 38445,
+      "sha256": "75091441193f1eee6e3d3c6763582a40b0b5b717f2627ff6187673600f74c852"
     },
     "site-config.js": {
       "bytes": 87,
@@ -81,7 +81,7 @@
     },
     "version.json": {
       "bytes": 31,
-      "sha256": "93663f3b43c840a2b19b2be1bd231e1466ee83f17867363c3e1521804f5f6d6b"
+      "sha256": "5b364f730034fefc285172c1ee014cb030ecfae9510c0b872ef91197076735c1"
     },
     "xiso-worker.js": {
       "bytes": 7292,
