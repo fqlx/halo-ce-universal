@@ -12,8 +12,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "app.js": {
-      "bytes": 51139,
-      "sha256": "de5685d2a09d7395235c6d4e857ae84114da9fa86beb35a1a20f0d8c4d178252"
+      "bytes": 50873,
+      "sha256": "5b33d14f0f12c8f5077bf8f1ab25bde22ee05e352f8bd27fbe786578b3bc3126"
     },
     "audio-worklet.js": {
       "bytes": 2692,
@@ -48,8 +48,8 @@
       "sha256": "e9b11b21da4105a1eb8bd2ae88a80505800b3d0240bbfb962c587d44e1ab25c0"
     },
     "index.html": {
-      "bytes": 10755,
-      "sha256": "579adef4145d3551af1090f872fb46f8e8b45674158a7c8d3e1733b1aa5520e4"
+      "bytes": 10397,
+      "sha256": "1e50bacf2862b37c7cb7c361cb93e29d49909969848f855145597d6f7cf43453"
     },
     "input.js": {
       "bytes": 18055,
@@ -72,8 +72,8 @@
       "sha256": "f594297800a9ac86aec51b8ff314d89097724a170b8de1ff5320217e8d9e0091"
     },
     "style.css": {
-      "bytes": 15164,
-      "sha256": "d8acd9095d268ce0c5995aba9b643e9eefd50e70c27e1e68f4e1bf08a1c84b8f"
+      "bytes": 15039,
+      "sha256": "149229b567f4c52ee5416a90ed938c3c3a3733d66aa64846ed98b5e92d324e5e"
     },
     "sw.js": {
       "bytes": 4582,
@@ -81,11 +81,13 @@
     },
     "version.json": {
       "bytes": 31,
-      "sha256": "d2f3fb252f0f51b9359067b59253cb7b9b0f9b4a95e22c966c7aa593ff5050e3"
+      "sha256": "7bb16616660b10f6ebb5a603ce379669b54617dcda7ef0ae41551aab1207b148"
     },
     "xiso-worker.js": {
       "bytes": 7292,
       "sha256": "f8433e6310dbbe5e44343e589ed77a661af98bfa02da7fdba533ea881cc142b7"
     }
-  }
+  },
+  "launcher_update": "Automatically attempt audio; unlock on normal gameplay input; remove enable button and popup",
+  "launcher_source_commit": "e06c962"
 }
