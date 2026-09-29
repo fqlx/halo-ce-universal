@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Play Halo CE</title>
+<style>
+	:root {
+		--bg: #07090c;
+		--panel: #11161d;
+		--panel-edge: #222b36;
+		--text: #d7dde5;
+		--muted: #8793a2;
+		--accent: #7fb8ff;
+		--accent-strong: #3d8bfd;
+		--danger: #ff7a70;
+		--ok: #7ddc9a;
+		color-scheme: dark;
+	}
+	* { box-sizing: border-box; }
+	html, body {
+		margin: 0;
+		height: 100%;
+		background: var(--bg);
+		color: var(--text);
+		font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+		overflow: hidden;
+	}
+	#stage {
+		position: fixed;
+		inset: 0;
+		background: #000;
+	}
+	#canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+		outline: none;
+		cursor: crosshair;
+	}
+	#launcher {
+		position: fixed;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 16px;
+		background: radial-gradient(ellipse at center, #121a24 0%, var(--bg) 70%);
+		overflow-y: auto;
+	}
+	#launcher[hidden] { display: none; }
+	.card {
+		width: 100%;
+		max-width: 560px;
+		background: var(--panel);
+		border: 1px solid var(--panel-edge);
+		border-radius: 12px;
+		padding: 24px;
+	}
+	h1 {
+		margin: 0 0 4px;
+		font-size: 26px;
+		line-height: 1.25;
+		letter-spacing: 0.02em;
+		font-weight: 600;
+	}
+	.subtitle { margin: 0 0 20px; color: var(--muted); font-size: 14px; }
+	.section { margin-top: 18px; }
+	.section h2 {
+		margin: 0 0 8px;
+		font-size: 13px;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--muted);
+		font-weight: 600;
+	}
+	.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+	button, .button {
+		appearance: none;
+		border: 1px solid var(--panel-edge);
+		background: #18202a;
+		color: var(--text);
+		padding: 8px 14px;
+		border-radius: 8px;
+		font: inherit;
+		cursor: pointer;
+	}
+	button:hover, .button:hover { border-color: var(--accent); }
+	button:disabled { opacity: 0.5; cursor: default; border-color: var(--panel-edge); }
+	button.primary {
+		background: var(--accent-strong);
+		border-color: var(--accent-strong);
+		color: #fff;
+		font-weight: 600;
+		padding: 10px 22px;
+	}
+	button.primary:hover:not(:disabled) { filter: brightness(1.1); }
+	/* until maps are stored, choosing the disc image is the thing to do */
+	#launcher:not(.ready) #disc-button {
+		background: var(--accent-strong);
+		border-color: var(--accent-strong);
+		color: #fff;
+		font-weight: 600;
+		padding: 12px 22px;
+		font-size: 16px;
+	}
+	#launcher:not(.ready) #disc-button:hover { filter: brightness(1.1); }
+	button.quiet, .button.quiet {
+		background: transparent;
+		border-color: transparent;
+		color: var(--muted);
+		font-size: 13px;
+		padding: 8px 6px;
+	}
+	button.quiet:hover, .button.quiet:hover { color: var(--text); border-color: transparent; text-decoration: underline; }
+	button[hidden] { display: none; }
+	#launcher.dragging .card { outline: 2px dashed var(--accent); outline-offset: 6px; }
+	input[type=file] { display: none; }
+	input[type=text] {
+		flex: 1;
+		min-width: 0;
+		background: #0b0f14;
+		color: var(--text);
+		border: 1px solid var(--panel-edge);
+		border-radius: 8px;
+		padding: 8px 10px;
+		font: 13px ui-monospace, SFMono-Regular, Consolas, monospace;
+	}
+	.help { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+	.help code { font-size: 12px; color: var(--text); }
+	.help a { color: var(--accent); }
+	.guide-link { margin: 0 0 14px; font-size: 18px; font-weight: 600; }
+	.guide-link a { color: var(--accent); }
+	.hint-big { margin: 0 0 16px; font-size: 19px; font-weight: 600; color: var(--text); }
+	#status { margin-top: 10px; font-size: 14px; color: var(--muted); min-height: 1.5em; }
+	#status.error { color: var(--danger); }
+	#status.ok { color: var(--ok); }
+	progress { width: 100%; height: 6px; margin-top: 8px; accent-color: var(--accent-strong); }
+	progress[hidden] { display: none; }
+	#maps {
+		margin: 8px 0 0;
+		font: 12px ui-monospace, SFMono-Regular, Consolas, monospace;
+		color: var(--muted);
+		max-height: 84px;
+		overflow-y: auto;
+	}
+	.controls {
+		display: grid;
+		grid-template-columns: max-content 1fr;
+		gap: 2px 14px;
+		font-size: 13px;
+		color: var(--muted);
+	}
+	.controls kbd {
+		font: 12px ui-monospace, SFMono-Regular, Consolas, monospace;
+		color: var(--text);
+	}
+	details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+	#hud {
+		position: fixed;
+		top: 10px;
+		right: 10px;
+		display: flex;
+		gap: 6px;
+		opacity: 0.25;
+		transition: opacity 0.2s;
+	}
+	#hud:hover { opacity: 1; }
+	#hud[hidden] { display: none; }
+	#hud button { padding: 4px 10px; font-size: 13px; background: rgba(17, 22, 29, 0.85); }
+	#log {
+		position: fixed;
+		left: 10px;
+		right: 10px;
+		bottom: 10px;
+		max-height: 40%;
+		overflow-y: auto;
+		background: rgba(7, 9, 12, 0.92);
+		border: 1px solid var(--panel-edge);
+		border-radius: 8px;
+		padding: 8px 10px;
+		font: 12px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+		white-space: pre-wrap;
+		word-break: break-all;
+		color: #aab4c0;
+	}
+	#log[hidden] { display: none; }
+	#hint {
+		position: fixed;
+		left: 50%;
+		bottom: 24px;
+		transform: translateX(-50%);
+		background: rgba(17, 22, 29, 0.85);
+		border: 1px solid var(--panel-edge);
+		border-radius: 8px;
+		padding: 6px 12px;
+		font-size: 13px;
+		color: var(--muted);
+		pointer-events: none;
+	}
+	#hint[hidden] { display: none; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="canvas" tabindex="-1"></canvas></div>
+
+<div id="hud" hidden>
+	<button id="fullscreen-button" type="button">Fullscreen</button>
+	<button id="log-button" type="button">Log</button>
+</div>
+<div id="hint" hidden>Click the game to capture the mouse &middot; Esc releases it</div>
+<div id="log" hidden></div>
+
+<div id="launcher">
+	<div class="card">
+		<h1>Halo CE browser beta test</h1>
+		<p class="subtitle">Combat Evolved &middot; the decompiled Xbox build, in your browser</p>
+
+		<div class="section">
+			<h2>Game data</h2>
+			<p class="help">
+				Choose the disc image of your own copy of <em>Halo: Combat Evolved</em>
+				for the original Xbox (a <code>.iso</code> or <code>.xiso</code> file, PAL or NTSC),
+				or drag it onto this page. The game's maps are copied out of it into this
+				browser's storage once; nothing is uploaded.
+			</p>
+			<p class="guide-link"><a href="https://html.itch.zone/html/19421784/guide.html" target="_blank">Step-by-step guide</a></p>
+			<p class="help" hidden>Trouble with storage here? <a id="own-tab" href="" target="_blank" rel="noopener">Open the game in its own tab</a> (choose the disc image again there).</p>
+			<p class="help">Self-hosted copy of <a href="https://bnunu.itch.io/apollobeta" target="_blank" rel="noopener">bnunu’s Apollo browser beta</a>.</p>
+			<div class="row">
+				<label class="button" id="disc-button" for="disc-input">Choose your Halo disc image&hellip;</label>
+				<input id="disc-input" type="file" accept=".iso,.xiso,.zip,.7z,.rar">
+				<label class="button quiet" for="folder-input">or a maps folder&hellip;</label>
+				<input id="folder-input" type="file" webkitdirectory multiple>
+				<button id="clear-button" class="quiet" type="button" hidden>Remove stored data</button>
+			</div>
+			<div id="maps"></div>
+			<progress id="progress" hidden max="1" value="0"></progress>
+			<div id="status"></div>
+		</div>
+
+		<div class="section">
+			<details>
+				<summary>Options</summary>
+				<div class="row" style="margin-top: 8px">
+					<input id="init-input" type="text" placeholder="console commands at start, e.g. map_name levels\b30\b30" spellcheck="false">
+				</div>
+			</details>
+		</div>
+
+		<div class="section row">
+			<button id="start-button" class="primary" type="button" disabled>Play</button>
+		</div>
+
+		<div class="section">
+			<details>
+				<summary>Controls</summary>
+				<div class="controls" style="margin-top: 8px">
+					<kbd>W A S D</kbd><span>move</span>
+					<kbd>mouse</kbd><span>aim</span>
+					<kbd>left button</kbd><span>fire</span>
+					<kbd>right button, G</kbd><span>grenade</span>
+					<kbd>space, enter</kbd><span>jump, accept</span>
+					<kbd>F, backspace</kbd><span>melee, back</span>
+					<kbd>E, R</kbd><span>action, reload</span>
+					<kbd>tab, wheel</kbd><span>switch weapon</span>
+					<kbd>Q</kbd><span>flashlight</span>
+					<kbd>C</kbd><span>crouch</span>
+					<kbd>Z, middle button</kbd><span>zoom</span>
+					<kbd>P, Esc</kbd><span>pause menu (Esc first releases the mouse)</span>
+					<kbd>F1</kbd><span>back</span>
+					<kbd>`</kbd><span>developer console</span>
+					<kbd>click, Esc</kbd><span>capture, release the mouse</span>
+				</div>
+			</details>
+		</div>
+	</div>
+</div>
+
+<script src="opaque-canvas.js"></script>
+<script src="stream-batch.js"></script>
+<script src="performance.js"></script>
+<script src="launcher.js"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+{
+  "source_commit": "c2799264bdf4c8dba35b198111b459032ed0c8d1",
+  "source_repository": "https://github.com/fqlx/halo-ce-universal",
+  "game_data_included": false,
+  "files": {
+    ".nojekyll": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "download-provenance.json": {
+      "bytes": 2774,
+      "sha256": "243fc6703c1e0e76098eab88c372d90fbf070f30ad25f5e5e86e2a511c17c150"
+    },
+    "halo-asyncify.js": {
+      "bytes": 219754,
+      "sha256": "f082f25e3bba34a1d8f67716feb59071f6f02a110da183b9c83d8d2ae9bb2c15"
+    },
+    "halo-asyncify.wasm": {
+      "bytes": 4009123,
+      "sha256": "77edefd9f55f564d69e9b16491a11ab173c6123f830663873a5cbe877a745696"
+    },
+    "halo.js": {
+      "bytes": 213946,
+      "sha256": "aeafc73007497ab44c0f2293824203ec281335edd0cf7275933443588bfc5bba"
+    },
+    "halo.wasm": {
+      "bytes": 2828672,
+      "sha256": "aad4a196055760d5f082bf2af8580956325d513e4d51bc07fe8ab8f8de9cd636"
+    },
+    "index.html": {
+      "bytes": 8733,
+      "sha256": "9572bfc7c3b99fffe6c188498b132fe52ecfa79b86a5c2b58ec0068c14174dd9"
+    },
+    "launcher.js": {
+      "bytes": 31776,
+      "sha256": "58d30b68e287dd94523fb4712ba4059540cfa6d33c40c2332e74d74f0fd1c45d"
+    },
+    "opaque-canvas.js": {
+      "bytes": 558,
+      "sha256": "d1fca053258733dfbbbdccd20ad484b51713e0504e91b1ca6cdd48c9d0aa27bf"
+    },
+    "performance.js": {
+      "bytes": 3157,
+      "sha256": "43922eb573fc25e1db9d870f362dcdaf1c3f9d2381e7885d217d4b332f746670"
+    },
+    "stream-batch.js": {
+      "bytes": 16031,
+      "sha256": "98367d7fa6e287e41417a8df9e45f57400566199784375a438f0c62c474c80bc"
+    },
+    "sw.js": {
+      "bytes": 1485,
+      "sha256": "1b3d773d5f575cc45276d1b9aeefa6b62106023059457c6c8c31a2d87ef49430"
+    }
+  }
+}
