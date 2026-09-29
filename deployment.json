@@ -1,9 +1,10 @@
 {
-  "source_commit": "f43a7a37c279a6ef57551d4bc01e88ce57f8d54a",
+  "source_commit": "0f9df4c23bd36aa5514264a2492fcd1d14906102",
   "source_dirty": false,
   "runtime": "source-built Emscripten 6.0.10",
   "native_network_version": 4,
   "relay_configured": false,
+  "default_browser_room": "FQLX01",
   "game_assets_included": false,
   "files": {
     ".nojekyll": {
@@ -11,8 +12,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "app.js": {
-      "bytes": 34625,
-      "sha256": "e5810dc6ffd6d3404d2dc5f544cbe1da393cc9ee6aef1c57a024d99467df0f96"
+      "bytes": 36433,
+      "sha256": "ccda65ddcd98cadfccb17a5e556c84fd4271da4a0c65c23cc2aebfa492bc6b31"
     },
     "audio-worklet.js": {
       "bytes": 2692,
@@ -23,8 +24,8 @@
       "sha256": "50a2c51af8ebf7b00b67d46e556cb7b1ffb3c3ecf0ac2b634e844ad0a3b1fece"
     },
     "gateway.js": {
-      "bytes": 7535,
-      "sha256": "55cdce70a7c181b15164ff1854aa4d8bddaf00adce041a5e520dda78c9fd2d12"
+      "bytes": 7573,
+      "sha256": "2b324d7e98fe635a085c63c3fad2c5eb0b48b02c306bf94292e3640c719278d0"
     },
     "halo.js": {
       "bytes": 119211,
@@ -47,8 +48,8 @@
       "sha256": "e9b11b21da4105a1eb8bd2ae88a80505800b3d0240bbfb962c587d44e1ab25c0"
     },
     "index.html": {
-      "bytes": 7910,
-      "sha256": "82ffdfc59d12c67fb565433b7604142990da061ada9dda7bda9e6004ff994ccb"
+      "bytes": 8143,
+      "sha256": "2f578f95a5e3497c1b3ab8499f59ca6ed4e2603bfd92f73eb601736b709987ec"
     },
     "input.js": {
       "bytes": 17821,
@@ -67,8 +68,8 @@
       "sha256": "58eaa9694ea6f58bc8a40a2224072fe0b9b1b3985e6c70de1d8c0093f3631994"
     },
     "site-config.js": {
-      "bytes": 62,
-      "sha256": "407c03f72cd73f0eb7c0229f76d75853a2709fc423d9a75301b03a8fb06c86f4"
+      "bytes": 87,
+      "sha256": "f594297800a9ac86aec51b8ff314d89097724a170b8de1ff5320217e8d9e0091"
     },
     "style.css": {
       "bytes": 13752,
@@ -80,11 +81,11 @@
     },
     "version.json": {
       "bytes": 31,
-      "sha256": "6caf71749f32e090d7e651676183fb70854af2ecd22986be65f7fa5084e3ccaf"
+      "sha256": "73b6ec8fa8b2a3184b4890dae35e0c85a329121ffe1ec078c0f1425241dea7e7"
     },
     "xiso-worker.js": {
-      "bytes": 7317,
-      "sha256": "20eed9ac6352d1bd9e37111fda1a72cb9127ed88c39bf7438d2139041e6c9305"
+      "bytes": 7292,
+      "sha256": "f8433e6310dbbe5e44343e589ed77a661af98bfa02da7fdba533ea881cc142b7"
     }
   }
 }
