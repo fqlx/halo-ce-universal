@@ -1,5 +1,5 @@
 {
-  "source_commit": "0261b2220414a72b39b3c214404bf6ee98442171",
+  "source_commit": "2ff17dd81771325ba2d81616b621f046aaca1373",
   "source_dirty": true,
   "runtime": "source-built Emscripten 6.0.10",
   "native_network_version": 4,
@@ -12,16 +12,16 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "app.js": {
-      "bytes": 52944,
-      "sha256": "068e74f5ac2dc0f67d2cbec19ad564c562f4c57ec52f71a08f7b728b8cb8c33c"
+      "bytes": 54991,
+      "sha256": "b36dd80dae7e5b4514b8c84206847dcb846ef9bd36390d9971f1a4368ed6f89d"
     },
     "audio-worklet.js": {
       "bytes": 2692,
       "sha256": "89ea63d7b2e39cf2f2b995c781b9879e2caf2d95249e4bfe44ee856341388e49"
     },
     "cache.js": {
-      "bytes": 14071,
-      "sha256": "50a2c51af8ebf7b00b67d46e556cb7b1ffb3c3ecf0ac2b634e844ad0a3b1fece"
+      "bytes": 17744,
+      "sha256": "044aec68dd475d1b795b995130ab0047dbabc344ac08031c3f9f7d4f6358b3dc"
     },
     "gateway.js": {
       "bytes": 7642,
@@ -32,8 +32,8 @@
       "sha256": "57aa3aa62bfa182d3ebf95c2bbc7f0c0e3563df8f3e4eb27fc8474db8a1b3b6e"
     },
     "halo.wasm": {
-      "bytes": 3023694,
-      "sha256": "474d15e1baf09b19fc3a86593fda4d61fb7136b5940497745c1bf0c5071f2c2f"
+      "bytes": 3023749,
+      "sha256": "851770e237688150f9a5826a42658d96a9a9c7a921151598db28e1067c564d9d"
     },
     "icons/icon-180.png": {
       "bytes": 9214,
@@ -48,8 +48,8 @@
       "sha256": "e9b11b21da4105a1eb8bd2ae88a80505800b3d0240bbfb962c587d44e1ab25c0"
     },
     "index.html": {
-      "bytes": 10839,
-      "sha256": "65a1ed53ad1bb48aea70c4a4eca4bd7a40c1416d56aa312cf215c1af6a87a827"
+      "bytes": 10953,
+      "sha256": "2f78e80d63171ef17ac065510dddfd5105885b23bcd682803c6eb137ebfe7c3d"
     },
     "input.js": {
       "bytes": 18055,
@@ -81,11 +81,12 @@
     },
     "version.json": {
       "bytes": 31,
-      "sha256": "e1746ca2ea041bdbbd7d2d3d53b19aecfc73503e40a41154db8c11782ac0e742"
+      "sha256": "3d82f9265912a014aeb2a471024e64334630356fe54789c0ebae7e3afb8d0979"
     },
     "xiso-worker.js": {
-      "bytes": 7292,
-      "sha256": "f8433e6310dbbe5e44343e589ed77a661af98bfa02da7fdba533ea881cc142b7"
+      "bytes": 7323,
+      "sha256": "511be70417fbb6f1bfc011425a25b32b8a1f6cfad09523938c8336d7a9b410d3"
     }
-  }
+  },
+  "source_dirty_reason": "Preexisting untracked experiments are preserved and excluded from the package. All tracked source changes are committed."
 }
