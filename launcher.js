@@ -288,6 +288,7 @@
 			maps.map((map) => map.name).join("  ") :
 			"No game data stored yet.";
 		const ready = maps.length > 0 && !problems.length;
+		if (!busy) window.haloAutoCache.refresh?.(maps);
 		elements.startButton.disabled = busy || !ready;
 		elements.clearButton.hidden = !maps.length;
 		elements.launcher.classList.toggle("ready", ready);

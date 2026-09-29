@@ -1,5 +1,5 @@
 {
-  "source_commit": "5c0c2a7d20f4b143bdfe314807ac28be467a23e7",
+  "source_commit": "7973484a9b0d066fd2992353bab99dda8927add8",
   "game_data_included": false,
   "files": {
     ".nojekyll": {
@@ -7,12 +7,12 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "auto-cache.js": {
-      "bytes": 7045,
-      "sha256": "d76d6d61e11f451d8a3f4ef5699ad40fa13f97e8ff8dc06ed76d97c180040d2a"
+      "bytes": 9711,
+      "sha256": "6ffaba669012738eb813fa870bb3b22c9f99386d6c393433cfcb98dfb9620f07"
     },
     "download-provenance.json": {
       "bytes": 3064,
-      "sha256": "106bd4eac8644473c5f8194ee531362fe1e23c4bc3bd9ca25b417745602e04e7"
+      "sha256": "d7b20f0059e6da8ccfd27f51d9cde195b142c9978c83affcc30664bfeca4357e"
     },
     "halo-asyncify.js": {
       "bytes": 219754,
@@ -31,12 +31,12 @@
       "sha256": "aad4a196055760d5f082bf2af8580956325d513e4d51bc07fe8ab8f8de9cd636"
     },
     "index.html": {
-      "bytes": 8838,
-      "sha256": "9cec242d636325fbb28c0176cd277b6b2f47eb7240e1ef1fc7c5f57582f831bf"
+      "bytes": 10765,
+      "sha256": "0dde28b1ce8b365d4fc7c1a4900e5f1d8965921d1eb93d6ccbf4c0666606ca6a"
     },
     "launcher.js": {
-      "bytes": 32400,
-      "sha256": "7163fc29e58b8c5ea364f6821b5922b9ef9305cc5b8940806dcf5e50bb646b9b"
+      "bytes": 32451,
+      "sha256": "74ebf643beb7bc8ef0219c5d65cd680ab9945b726e11b65699dfd8f848d46bdf"
     },
     "opaque-canvas.js": {
       "bytes": 558,

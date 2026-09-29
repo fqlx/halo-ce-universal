@@ -61,8 +61,8 @@
       "sha256": "43922eb573fc25e1db9d870f362dcdaf1c3f9d2381e7885d217d4b332f746670"
     },
     "auto-cache.js": {
-      "bytes": 7045,
-      "sha256": "d76d6d61e11f451d8a3f4ef5699ad40fa13f97e8ff8dc06ed76d97c180040d2a"
+      "bytes": 9711,
+      "sha256": "6ffaba669012738eb813fa870bb3b22c9f99386d6c393433cfcb98dfb9620f07"
     }
   },
   "installed_engine": {
@@ -71,7 +71,7 @@
     "halo-asyncify.js": "f082f25e3bba34a1d8f67716feb59071f6f02a110da183b9c83d8d2ae9bb2c15",
     "halo-asyncify.wasm": "77edefd9f55f564d69e9b16491a11ab173c6123f830663873a5cbe877a745696"
   },
-  "local_index_sha256": "9cec242d636325fbb28c0176cd277b6b2f47eb7240e1ef1fc7c5f57582f831bf",
+  "local_index_sha256": "0dde28b1ce8b365d4fc7c1a4900e5f1d8965921d1eb93d6ccbf4c0666606ca6a",
   "opaque_canvas_sha256": "d1fca053258733dfbbbdccd20ad484b51713e0504e91b1ca6cdd48c9d0aa27bf",
-  "local_launcher_sha256": "7163fc29e58b8c5ea364f6821b5922b9ef9305cc5b8940806dcf5e50bb646b9b"
+  "local_launcher_sha256": "74ebf643beb7bc8ef0219c5d65cd680ab9945b726e11b65699dfd8f848d46bdf"
 }
