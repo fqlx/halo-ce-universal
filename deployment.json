@@ -1,5 +1,5 @@
 {
-  "source_commit": "b6d894bd495f14f5b1eb654ec776a585798780ab",
+  "source_commit": "1fbb87304b7fbcb2b27edec04ab99182707df11c",
   "source_dirty": false,
   "runtime": "source-built Emscripten 6.0.10",
   "native_network_version": 4,
@@ -12,8 +12,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "app.js": {
-      "bytes": 39738,
-      "sha256": "a68ba9ec2245dc70f7c7fba850362f3c938e83052914a581a69eb291785389af"
+      "bytes": 47912,
+      "sha256": "b636d4f7c3cd0fdedb02a29d232abb27fdc19b6cfaa77471c6aff27c083393ea"
     },
     "audio-worklet.js": {
       "bytes": 2692,
@@ -24,16 +24,16 @@
       "sha256": "50a2c51af8ebf7b00b67d46e556cb7b1ffb3c3ecf0ac2b634e844ad0a3b1fece"
     },
     "gateway.js": {
-      "bytes": 7573,
-      "sha256": "2b324d7e98fe635a085c63c3fad2c5eb0b48b02c306bf94292e3640c719278d0"
+      "bytes": 7642,
+      "sha256": "0ede373ed1b32dc4b4c0646c70aa96d8546a6cc82732f16a5a018e6ba02e5139"
     },
     "halo.js": {
-      "bytes": 129903,
-      "sha256": "dfa7420787d35aef66c6618012d6fd34aa19f990864ab87e0a005e3e13724fbc"
+      "bytes": 130200,
+      "sha256": "2d219ec89e82f771e863ea374a2a42f60b0e8cc00416aac40a9fecb21a797f01"
     },
     "halo.wasm": {
-      "bytes": 3011707,
-      "sha256": "292e56a067616b08f0333f61bf0c5fac2671aae22cec95cc228f25ed0956b7fe"
+      "bytes": 3019066,
+      "sha256": "c24018edef236913ccdaea5843e1226256d0d8ab1a9ab3523c67b0286ae79941"
     },
     "icons/icon-180.png": {
       "bytes": 9214,
@@ -48,8 +48,8 @@
       "sha256": "e9b11b21da4105a1eb8bd2ae88a80505800b3d0240bbfb962c587d44e1ab25c0"
     },
     "index.html": {
-      "bytes": 9146,
-      "sha256": "030b991bd661b2ea5198ee8b075c3cf4fa89512e9251037e5fa3e391a841b2aa"
+      "bytes": 10531,
+      "sha256": "6e4918b16f604e1d920598b69306a6f482418ba937841960564540d85215f798"
     },
     "input.js": {
       "bytes": 17821,
@@ -64,16 +64,16 @@
       "sha256": "c8aa5f1a99a01dc63e31f90f7ccbdc575558e612ec618976ed464bd3e2a92143"
     },
     "net.js": {
-      "bytes": 20271,
-      "sha256": "58eaa9694ea6f58bc8a40a2224072fe0b9b1b3985e6c70de1d8c0093f3631994"
+      "bytes": 30662,
+      "sha256": "4c2228d1c691bde3b7cc5e32de770a18659e23cabf215e599c54799c1b7ed021"
     },
     "site-config.js": {
       "bytes": 87,
       "sha256": "f594297800a9ac86aec51b8ff314d89097724a170b8de1ff5320217e8d9e0091"
     },
     "style.css": {
-      "bytes": 13752,
-      "sha256": "32ababaa6f4103cdcb65487a98da229548507c308fb54236ae7848b29706520a"
+      "bytes": 14731,
+      "sha256": "6e17ad53c01a8c4af98f62c7e1f96b394236bb5c15916c23f55aa3822454ecd4"
     },
     "sw.js": {
       "bytes": 4582,
@@ -81,7 +81,7 @@
     },
     "version.json": {
       "bytes": 31,
-      "sha256": "204a8ce4e35c0f6432cdb22485b6aa1310d8bd141f4737e2a8286d275e6e38bd"
+      "sha256": "52e7adfdb086c40c0f2c400a6dad5a4b24e92f787afa0f6647fe856d829fe352"
     },
     "xiso-worker.js": {
       "bytes": 7292,
