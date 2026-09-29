@@ -1,5 +1,5 @@
 {
-  "source_commit": "1fbb87304b7fbcb2b27edec04ab99182707df11c",
+  "source_commit": "0958c158ddc959999a1596e9b5731d89e0ee18f7",
   "source_dirty": false,
   "runtime": "source-built Emscripten 6.0.10",
   "native_network_version": 4,
@@ -12,8 +12,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "app.js": {
-      "bytes": 47912,
-      "sha256": "b636d4f7c3cd0fdedb02a29d232abb27fdc19b6cfaa77471c6aff27c083393ea"
+      "bytes": 48725,
+      "sha256": "f7d27337bb12d02ad6897d5ab32df7629163e1892e58dba32989aa10d28442e2"
     },
     "audio-worklet.js": {
       "bytes": 2692,
@@ -28,12 +28,12 @@
       "sha256": "0ede373ed1b32dc4b4c0646c70aa96d8546a6cc82732f16a5a018e6ba02e5139"
     },
     "halo.js": {
-      "bytes": 130200,
-      "sha256": "2d219ec89e82f771e863ea374a2a42f60b0e8cc00416aac40a9fecb21a797f01"
+      "bytes": 130564,
+      "sha256": "7152a5f4cf7000900b7b0903747b5ee367d0633a80895e9b12307481e286f886"
     },
     "halo.wasm": {
-      "bytes": 3019066,
-      "sha256": "c24018edef236913ccdaea5843e1226256d0d8ab1a9ab3523c67b0286ae79941"
+      "bytes": 3021550,
+      "sha256": "1511928854f16f0faec8b462f8b24c333bdb0b1b0a63b7d85fff71f0f098b56e"
     },
     "icons/icon-180.png": {
       "bytes": 9214,
@@ -81,7 +81,7 @@
     },
     "version.json": {
       "bytes": 31,
-      "sha256": "52e7adfdb086c40c0f2c400a6dad5a4b24e92f787afa0f6647fe856d829fe352"
+      "sha256": "8549ff34186b2213e465a73d3a057d65ab9f02f02536873d8904b29cbc660818"
     },
     "xiso-worker.js": {
       "bytes": 7292,
