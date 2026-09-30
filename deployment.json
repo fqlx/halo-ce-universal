@@ -1,5 +1,5 @@
 {
-  "source_commit": "9805bf9e05b3477413467bb0f8fcd9dcc4a2db4e",
+  "source_commit": "557477a6c6ddc8df01fd0a123b130c535089f850",
   "source_dirty": false,
   "runtime": "source-built Emscripten 6.0.10",
   "native_network_version": 5,
@@ -12,8 +12,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "app.js": {
-      "bytes": 57230,
-      "sha256": "cc0a5f031512c468de02d3a82eb4ffc584f4c2794c0e44a38eb57eb7df413be0"
+      "bytes": 60172,
+      "sha256": "6412f05108027d1a0fc8b1b109d525ec054a616fce4412e338f7a373c990978f"
     },
     "audio-worklet.js": {
       "bytes": 2692,
@@ -32,8 +32,8 @@
       "sha256": "e04e1ea403b55308006c6fe182f366d951badc1f65a101d256106fc642bb2bde"
     },
     "halo.wasm": {
-      "bytes": 3198855,
-      "sha256": "f6cd2eb0dab6693918bedc408d0564a45b49ab4a18f81a9042490fe774170b62"
+      "bytes": 3200284,
+      "sha256": "5455064cdc740625308657d86f8c0a83eabfcf81cbdc3e4339ee1dbb0b7df08d"
     },
     "icons/icon-180.png": {
       "bytes": 9214,
@@ -48,8 +48,8 @@
       "sha256": "e9b11b21da4105a1eb8bd2ae88a80505800b3d0240bbfb962c587d44e1ab25c0"
     },
     "index.html": {
-      "bytes": 10747,
-      "sha256": "8c08027289f73e1599a07206fa86029e1e097d8ac2272b6ee4fac26dcc752aaf"
+      "bytes": 10835,
+      "sha256": "4607b2688ee6ff6af219fbb4218f0089a01ca2f9e32abea02270f4fc9249eb83"
     },
     "input.js": {
       "bytes": 25112,
@@ -64,8 +64,8 @@
       "sha256": "c8aa5f1a99a01dc63e31f90f7ccbdc575558e612ec618976ed464bd3e2a92143"
     },
     "net.js": {
-      "bytes": 52275,
-      "sha256": "6a1a65aa24f22cd5953cd5675582efbd3ed55973aba87a275d5fa39393cac387"
+      "bytes": 54218,
+      "sha256": "5581a850b378f26794a55098ba08ad3c20644e349b00675efdf7c0efde118107"
     },
     "site-config.js": {
       "bytes": 87,
@@ -89,7 +89,7 @@
     },
     "version.json": {
       "bytes": 31,
-      "sha256": "38700a79d7a29b4a3a02addf705e68b6c58070668ac0a0bd5e3a92ec346b5d49"
+      "sha256": "7e64ef94616a6557ade30c5c79c94afe1535780651974bf9468fc0a8989e585e"
     },
     "xiso-worker.js": {
       "bytes": 7343,
