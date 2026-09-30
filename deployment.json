@@ -1,5 +1,5 @@
 {
-  "source_commit": "84679a0cddf718e7e80d2baae7e3243a6eb4cb13",
+  "source_commit": "9805bf9e05b3477413467bb0f8fcd9dcc4a2db4e",
   "source_dirty": false,
   "runtime": "source-built Emscripten 6.0.10",
   "native_network_version": 5,
@@ -32,8 +32,8 @@
       "sha256": "e04e1ea403b55308006c6fe182f366d951badc1f65a101d256106fc642bb2bde"
     },
     "halo.wasm": {
-      "bytes": 3198864,
-      "sha256": "760c8de19e969186f35a5af61ba7d920aaa4c35095b42e8fcbf87e2fddce79d4"
+      "bytes": 3198855,
+      "sha256": "f6cd2eb0dab6693918bedc408d0564a45b49ab4a18f81a9042490fe774170b62"
     },
     "icons/icon-180.png": {
       "bytes": 9214,
@@ -64,8 +64,8 @@
       "sha256": "c8aa5f1a99a01dc63e31f90f7ccbdc575558e612ec618976ed464bd3e2a92143"
     },
     "net.js": {
-      "bytes": 51833,
-      "sha256": "aa13e14d40d7c277b4a97c12bc74971c9100a8b47f1c0df48528ddc3a0b5d08b"
+      "bytes": 52275,
+      "sha256": "6a1a65aa24f22cd5953cd5675582efbd3ed55973aba87a275d5fa39393cac387"
     },
     "site-config.js": {
       "bytes": 87,
@@ -89,7 +89,7 @@
     },
     "version.json": {
       "bytes": 31,
-      "sha256": "63c5f7045a032c9004126396541c4e3d2eddecc5ced553628d3462f81c03db29"
+      "sha256": "38700a79d7a29b4a3a02addf705e68b6c58070668ac0a0bd5e3a92ec346b5d49"
     },
     "xiso-worker.js": {
       "bytes": 7343,
