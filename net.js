@@ -45,10 +45,13 @@ class HaloQuickCoordinator {
     this.result = null;
     this.epoch = 0;
     this.recovering = false;
+    this.hasMatch = false;
     this.missingSince = null;
-    this.presence = { role: 'candidate', hostId: null, phase: 'electing', gamePhase: '', epoch: 0, failover: true };
+    this.presence = { role: 'candidate', hostId: null, phase: 'electing', gamePhase: '', epoch: 0, failover: true,
+      migration: true, matchId: null, checkpointTick: -1 };
   }
   recover(now, epoch = this.epoch + 1) {
+    this.freshJoin = !this.result && this.presence.matchId === null;
     this.epoch = epoch;
     this.recovering = true;
     this.started = now;
@@ -58,7 +61,7 @@ class HaloQuickCoordinator {
     this.reservedSince = null;
     this.result = null;
     this.missingSince = null;
-    this.presence = { role: 'candidate', hostId: null, phase: 'electing', gamePhase: '', epoch, failover: true };
+    this.presence = { ...this.presence, role: 'candidate', hostId: null, phase: 'electing', epoch, failover: true };
   }
   select(id, now) {
     if (id !== this.selected) {
@@ -85,20 +88,23 @@ class HaloQuickCoordinator {
       }
     }
     if (this.result) return { result: this.result };
-    if (now - this.started >= HaloQuickCoordinator.TIMEOUT_MS)
+    const preservingMatch = this.recovering && this.hasMatch && this.presence.matchId !== null;
+    if (!preservingMatch && now - this.started >= HaloQuickCoordinator.TIMEOUT_MS)
       return { error: 'The room could not agree on a reachable host. Check the connection, then try again.' };
     if (brokerReady && this.brokerSince === null) this.brokerSince = now;
     const active = peers.filter(peer => peer.quick && (peer.quick.epoch || 0) === this.epoch && Number.isInteger(peer.address) &&
       peer.address > 0 && peer.address <= 0xffffffff);
-    const hosts = active.filter(peer => peer.quick.role === 'host');
+    const hosts = active.filter(peer => peer.quick.role === 'host' && peer.quick.gamePhase !== 'migration-failed' && (!this.recovering ||
+      (peer.quick.migration && peer.quick.checkpointTick >= 0 && (this.freshJoin || peer.quick.matchId === this.presence.matchId))));
     if (this.presence.role === 'host') hosts.push({ id: this.id, address: this.address, open: true, quick: this.presence });
     hosts.sort((a, b) => Number(b.quick.phase === 'launched') - Number(a.quick.phase === 'launched') || a.id.localeCompare(b.id));
     if (hosts.length) {
       const host = hosts[0];
+      if (this.freshJoin) this.presence.matchId = host.quick.matchId;
       this.select(host.id, now);
       if (!host.open) return { state: 'connecting', message: 'Connecting to the room’s host…' };
       if (host.id !== this.id && this.presence.role !== 'join') {
-        this.presence = { role: 'join', hostId: host.id, phase: 'reserved', gamePhase: '', epoch: this.epoch, failover: true };
+        this.presence = { ...this.presence, role: 'join', hostId: host.id, phase: 'reserved', epoch: this.epoch, failover: true };
         this.reservedSince = now;
       }
       if (now - this.reservedSince < HaloQuickCoordinator.RESERVE_MS)
@@ -111,7 +117,13 @@ class HaloQuickCoordinator {
       return { state: 'connecting', message: 'Waiting for the room’s existing host…' };
     if (!brokerReady) return { state: 'connecting', message: 'Connecting to the multiplayer room…' };
     const candidates = active.filter(peer => peer.quick.role === 'candidate');
-    const selected = [this.id, ...candidates.map(peer => peer.id)].sort()[0];
+    const eligible = candidate => candidate.quick.gamePhase !== 'migration-failed' && (!this.recovering ||
+      (candidate.quick.migration && candidate.quick.checkpointTick >= 0 &&
+        candidate.quick.matchId !== null && candidate.quick.matchId === this.presence.matchId));
+    const choices = [...candidates, { id: this.id, quick: this.presence }].filter(eligible);
+    choices.sort((a, b) => (this.recovering ? b.quick.checkpointTick - a.quick.checkpointTick : 0) || a.id.localeCompare(b.id));
+    const selected = choices[0]?.id;
+    if (!selected) return { state: 'recovering', message: 'Waiting for a player with a complete match checkpoint…' };
     this.select(selected, now);
     if (candidates.some(peer => !peer.open))
       return { state: 'connecting', message: 'Connecting the players before choosing a host…' };
@@ -119,16 +131,29 @@ class HaloQuickCoordinator {
       now - this.selectedSince >= HaloQuickCoordinator.SETTLE_MS;
     // Each connected candidate must have observed and acknowledged the same
     // winner before it can reserve the host role. Idle room members do not vote.
-    const acknowledged = candidates.every(peer => peer.quick.hostId === selected);
+    const acknowledged = candidates.filter(eligible).every(peer => peer.quick.hostId === selected);
     if (selected === this.id && settled && acknowledged) {
-      this.presence = { role: 'host', hostId: this.id, phase: 'reserved', gamePhase: '', epoch: this.epoch, failover: true };
+      this.presence = { ...this.presence, role: 'host', hostId: this.id, phase: 'reserved', epoch: this.epoch, failover: true };
       this.reservedSince = now;
       return { state: 'coordinating', message: 'Preparing to host the room…' };
     }
     return { state: 'coordinating', message: 'Choosing a multiplayer host…' };
   }
   launched(phase = 'loading') {
-    if (this.result) { this.presence.phase = 'launched'; this.presence.gamePhase = phase; }
+    if (this.result) {
+      this.presence.phase = 'launched'; this.presence.gamePhase = phase;
+      if (phase === 'playing') this.hasMatch = true;
+    }
+  }
+  checkpoint(epoch, tick, matchId) {
+    if (epoch !== this.epoch || !Number.isInteger(tick) || tick < 0 || tick > 0x7fffffff ||
+        !Number.isInteger(matchId) || matchId < 0 || matchId > 0xffffffff) return false;
+    if (this.presence.matchId !== null && this.presence.matchId !== matchId) return false;
+    if (tick < this.presence.checkpointTick) return false;
+    this.presence.matchId = matchId;
+    this.presence.checkpointTick = tick;
+    this.hasMatch = true;
+    return true;
   }
 }
 
@@ -142,8 +167,13 @@ const HaloNet = (() => {
   const HELLO_INTERVAL = 3000;
   const PEER_TIMEOUT = 20000;
   const PACKET_HEADER = 24;
+  const MIGRATION_MAGIC = 0x484d4731;
+  const MIGRATION_HEADER = 8;
   const MAX_RELIABLE_QUEUE = 8 * 1024 * 1024;
   const MAX_CHANNEL_BUFFER = 1024 * 1024;
+  const PING_CONTROL = 'halo-host-rtt-v1:';
+  const PING_STALE_MS = 10000;
+  const PING_PEERS = 128;
   const KIND = { DATAGRAM: 1, OPEN: 2, DATA: 3, CLOSE: 4, REFUSE: 5 };
 
   const state = {
@@ -167,6 +197,8 @@ const HaloNet = (() => {
     quick: null,
     quickSequence: 0,
     roomGeneration: 0,
+    pings: { signature: '', authority: null, rows: [], updated: 0, sequence: 0, received: 0 },
+    pingProbe: 0,
   };
 
   function randomId() {
@@ -208,6 +240,8 @@ const HaloNet = (() => {
       brokers: state.brokers.filter((broker) => broker.ready).length,
       players: connected,
       names: [...state.peers.values()].filter((peer) => peer.open).map((peer) => peer.name),
+      hostPings: state.pings.rows.map(([address, ms]) => ({ address: addressText(address),
+        ms: Date.now() - state.pings.updated < PING_STALE_MS && ms >= 0 ? ms : null })),
     };
   }
 
@@ -382,6 +416,10 @@ const HaloNet = (() => {
       state.peers.set(id, peer);
     }
     if (address) {
+      if (peer.address !== (address >>> 0)) {
+        peer.pingPending = peer.hostPing = null;
+        invalidatePeerPing(peer);
+      }
       if (state.byAddress.get(peer.address) === peer) state.byAddress.delete(peer.address);
       peer.address = address >>> 0;
       const previous = state.byAddress.get(peer.address);
@@ -406,6 +444,8 @@ const HaloNet = (() => {
     const previous = peer.pc;
     peer.pc = null;
     peer.open = false;
+    peer.pingPending = peer.hostPing = null;
+    invalidatePeerPing(peer);
     retireStreams(peer);
     try { previous?.close(); } catch { /* closed */ }
     const pc = new RTCPeerConnection({ iceServers: state.iceServers });
@@ -423,7 +463,8 @@ const HaloNet = (() => {
     peer.reliable.onmessage = (event) => {
       if (!connectionCurrent(peer, pc) || !state.shared) return;
       peer.lastPacketAt = Date.now();
-      const packet = new Uint8Array(event.data);
+      const packet = receivePacket(peer, new Uint8Array(event.data));
+      if (!packet) return;
       if (packet.length < PACKET_HEADER || packet.length > state.shared.offsets.netInBytes ||
           new DataView(packet.buffer).getUint32(0, true) !== packet.length ||
           peer.receivedBytes + packet.length > MAX_RELIABLE_QUEUE) {
@@ -443,11 +484,13 @@ const HaloNet = (() => {
       if (typeof event.data === 'string') {
         if (event.data === 'halo-room-ping-v1' && peer.unreliable.readyState === 'open')
           peer.unreliable.send('halo-room-pong-v1');
+        else if (event.data.startsWith(PING_CONTROL)) receivePing(peer, event.data);
         return;
       }
       // Network events also drain output while background timers are throttled.
       pump();
-      if (!state.pendingCloses.size) incoming(new Uint8Array(event.data));
+      const packet = receivePacket(peer, new Uint8Array(event.data));
+      if (packet && !state.pendingCloses.size) incoming(packet);
     };
     peer.reliable.bufferedAmountLowThreshold = MAX_CHANNEL_BUFFER / 2;
     peer.reliable.onbufferedamountlow = () => { if (connectionCurrent(peer, pc)) pump(); };
@@ -477,6 +520,8 @@ const HaloNet = (() => {
     const pc = peer.pc, wasOpen = peer.open;
     peer.pc = null;
     peer.open = false;
+    peer.pingPending = peer.hostPing = null;
+    invalidatePeerPing(peer);
     peer.received = [];
     peer.receivedHead = peer.receivedBytes = 0;
     retireStreams(peer);
@@ -558,6 +603,122 @@ const HaloNet = (() => {
       if (peer.open && peer.unreliable?.readyState === 'open' && peer.unreliable.bufferedAmount < MAX_CHANNEL_BUFFER)
         peer.unreliable.send('halo-room-ping-v1');
     }
+    sweepPings(now);
+  }
+
+  // Measure over the gameplay channel, rather than MQTT or ICE candidate
+  // statistics. Only the selected host probes, then publishes its RTT table.
+  function pingAuthority() {
+    const coordinator = state.quick?.coordinator;
+    const result = coordinator?.result, presence = coordinator?.presence;
+    if (!result || presence?.gamePhase !== 'playing' || presence.matchId === null ||
+        coordinator.recovering || coordinator.missingSince != null || state.quick.held) return null;
+    if (!Number.isInteger(presence.matchId) || !Number.isInteger(coordinator.epoch)) return null;
+    return { hostId: result.hostId, host: result.hostAddress >>> 0,
+      epoch: coordinator.epoch, match: presence.matchId, local: result.role === 'host' };
+  }
+
+  function publishPingMemory() {
+    if (!state.shared || !Number.isInteger(state.shared.offsets.pingSequence)) return;
+    const i32 = words(), pings = state.pings, authority = pings.authority;
+    Atomics.add(i32, field('pingSequence'), 1);
+    Atomics.store(i32, field('pingHost'), authority?.host || 0);
+    Atomics.store(i32, field('pingEpoch'), authority?.epoch || 0);
+    Atomics.store(i32, field('pingUpdated'), pings.updated | 0);
+    const rows = pings.rows.slice(0, Math.min(PING_PEERS, state.shared.offsets.pingPeerCount));
+    Atomics.store(i32, field('pingCount'), rows.length);
+    rows.forEach(([address, ms], index) => {
+      Atomics.store(i32, field('pingPeers') + index * 2, address | 0);
+      Atomics.store(i32, field('pingPeers') + index * 2 + 1, ms);
+    });
+    Atomics.add(i32, field('pingSequence'), 1);
+  }
+
+  function syncPingAuthority() {
+    const authority = pingAuthority();
+    const signature = authority ? `${state.roomGeneration}:${authority.hostId}:${authority.host}:${authority.epoch}:${authority.match}` : '';
+    if (signature !== state.pings.signature) {
+      state.pings = { signature, authority, rows: [], updated: 0, sequence: 0, received: 0 };
+      for (const peer of state.peers.values()) peer.pingPending = peer.hostPing = null;
+      publishPingMemory();
+    }
+    return authority;
+  }
+
+  function invalidatePeerPing(peer) {
+    if (state.pings.authority?.hostId === peer.id) {
+      state.pings.rows = []; state.pings.updated = 0;
+      // A reopened connection must not revive an old table sequence.
+    } else state.pings.rows = state.pings.rows.filter(row => row[0] !== peer.address);
+    publishPingMemory();
+  }
+
+  function sendPing(peer, message) {
+    if (peer.open && peer.unreliable?.readyState === 'open' && peer.unreliable.bufferedAmount < MAX_CHANNEL_BUFFER)
+      peer.unreliable.send(PING_CONTROL + JSON.stringify(message));
+  }
+
+  function hostPingTable(now, authority, broadcast = true) {
+    state.pings.rows = [[state.address, 0, state.id], ...[...state.peers.values()]
+      .filter(peer => peer.open && peer.quick?.epoch === authority.epoch && peer.quick?.matchId === authority.match)
+      .slice(0, PING_PEERS - 1).map(peer => [peer.address,
+        peer.hostPing && now - peer.hostPing.at >= 0 && now - peer.hostPing.at < PING_STALE_MS ? peer.hostPing.ms : -1, peer.id])];
+    state.pings.updated = now;
+    publishPingMemory();
+    if (!broadcast) return;
+    const table = { ...authority, local: undefined, type: 'table', sequence: ++state.pings.sequence, rows: state.pings.rows };
+    for (const peer of state.peers.values()) sendPing(peer, table);
+  }
+
+  function sweepPings(now) {
+    const authority = syncPingAuthority();
+    if (!authority?.local) return;
+    for (const peer of state.peers.values()) {
+      if (!peer.open || peer.quick?.epoch !== authority.epoch || peer.quick?.matchId !== authority.match) continue;
+      if (peer.pingPending && now - peer.pingPending.at < PING_STALE_MS && now >= peer.pingPending.at) continue;
+      peer.pingPending = { sequence: ++state.pingProbe, at: now };
+      sendPing(peer, { ...authority, local: undefined, type: 'probe', sequence: peer.pingPending.sequence });
+    }
+    hostPingTable(now, authority);
+  }
+
+  function receivePing(peer, wire) {
+    const authority = syncPingAuthority();
+    if (!authority || wire.length > 8192 || !peer.open) return;
+    let message;
+    try { message = JSON.parse(wire.slice(PING_CONTROL.length)); } catch { return; }
+    if (!message || message.hostId !== authority.hostId || message.host !== authority.host ||
+        message.epoch !== authority.epoch || message.match !== authority.match ||
+        !Number.isSafeInteger(message.sequence) || message.sequence <= 0) return;
+    const now = Date.now();
+    if (message.type === 'probe' && !authority.local && peer.id === authority.hostId && peer.address === authority.host) {
+      sendPing(peer, { ...message, type: 'pong' });
+    } else if (message.type === 'pong' && authority.local && peer.pingPending?.sequence === message.sequence) {
+      const ms = now - peer.pingPending.at;
+      peer.pingPending = null;
+      if (ms < 0 || ms >= PING_STALE_MS) return;
+      peer.hostPing = { ms: Math.round(ms), at: now };
+      hostPingTable(now, authority, false);
+    } else if (message.type === 'table' && !authority.local && peer.id === authority.hostId && peer.address === authority.host) {
+      if (message.sequence <= state.pings.received || !Array.isArray(message.rows) ||
+          message.rows.length < 1 || message.rows.length > PING_PEERS) return;
+      const addresses = new Set();
+      for (const row of message.rows) {
+        if (!Array.isArray(row) || row.length !== 3 || !/^[a-f0-9]{16}$/.test(row[2] || '') ||
+            !Number.isInteger(row[0]) || row[0] <= 0 || row[0] > 0xffffffff ||
+            !Number.isInteger(row[1]) || row[1] < -1 || row[1] >= PING_STALE_MS || addresses.has(row[0]) ||
+            (row[0] === authority.host && (row[1] !== 0 || row[2] !== authority.hostId))) return;
+        addresses.add(row[0]);
+      }
+      if (!addresses.has(authority.host)) return;
+      state.pings.received = message.sequence;
+      // Address reuse after a reload must not attach the departed peer's
+      // RTT to its replacement, even if an older table arrives late.
+      state.pings.rows = message.rows.filter(([address, , id]) =>
+        address === state.address ? id === state.id : state.byAddress.get(address)?.id === id);
+      state.pings.updated = now;
+      publishPingMemory();
+    }
   }
 
   // ---------- the rings (port/web/src/web_shared.h)
@@ -633,6 +794,13 @@ const HaloNet = (() => {
   }
 
   function send(channel, packet) {
+    if (state.quick) {
+      const frame = new Uint8Array(packet.length + MIGRATION_HEADER), view = new DataView(frame.buffer);
+      view.setUint32(0, MIGRATION_MAGIC, true);
+      view.setUint32(4, state.quick.coordinator.epoch, true);
+      frame.set(packet, MIGRATION_HEADER);
+      packet = frame;
+    }
     if (channel && channel.readyState === 'open') {
       if (channel.bufferedAmount + packet.length > MAX_CHANNEL_BUFFER) return false;
       try { channel.send(packet); return true; } catch { /* closing */ }
@@ -640,7 +808,27 @@ const HaloNet = (() => {
     return false;
   }
 
+  function receivePacket(peer, frame) {
+    const epoch = state.quick?.coordinator.epoch;
+    let packet = frame;
+    if (frame.length >= MIGRATION_HEADER && new DataView(frame.buffer, frame.byteOffset, frame.byteLength).getUint32(0, true) === MIGRATION_MAGIC) {
+      const generation = new DataView(frame.buffer, frame.byteOffset, frame.byteLength).getUint32(4, true);
+      if (generation !== epoch) return null;
+      packet = frame.slice(MIGRATION_HEADER);
+      packet.haloEpoch = generation;
+    } else if (epoch !== undefined) return null;
+    if (epoch !== undefined) {
+      if (packet.length < PACKET_HEADER) return null;
+      const view = new DataView(packet.buffer, packet.byteOffset, packet.byteLength);
+      if (view.getUint32(8, true) !== peer.address) return null;
+      const destination = view.getUint32(12, true);
+      if (destination !== state.address && !isBroadcast(destination)) return null;
+    }
+    return packet;
+  }
+
   function pump() {
+    syncPingAuthority();
     if (!state.shared) return;
     if (state.transport) state.transport.flush(incoming);
     for (const [key, close] of state.pendingCloses) {
@@ -651,8 +839,15 @@ const HaloNet = (() => {
     // first: the same tuple may already belong to that replacement by then.
     for (const peer of state.pendingCloses.size ? [] : state.peers.values()) {
       if (!peer.received) continue;
-      while (peer.receivedHead < peer.received.length && incoming(peer.received[peer.receivedHead])) {
-        const packet = peer.received[peer.receivedHead++];
+      while (peer.receivedHead < peer.received.length) {
+        const packet = peer.received[peer.receivedHead];
+        if (packet.haloEpoch !== state.quick?.coordinator.epoch) {
+          peer.receivedHead++;
+          peer.receivedBytes -= packet.length;
+          continue;
+        }
+        if (!incoming(packet)) break;
+        peer.receivedHead++;
         trackStream(peer, packet);
         peer.receivedBytes -= packet.length;
       }
@@ -726,6 +921,7 @@ const HaloNet = (() => {
     state.shared = { memory, base, offsets };
     const i32 = words();
     Atomics.store(i32, field('netLocalAddress'), state.address | 0);
+    publishPingMemory();
     if (state.transport) state.transport.attach(state.shared);
     // (the game's sockets look at the incoming ring every few milliseconds;
     // this looks at the outgoing one as often)
@@ -797,7 +993,10 @@ const HaloNet = (() => {
     return { role: value.role, hostId: value.hostId, phase: value.phase,
       epoch: Number.isSafeInteger(value.epoch) && value.epoch >= 0 && value.epoch <= 0x7fffffff ? value.epoch : 0,
       failover: value.failover === true,
-      gamePhase: ['hosting', 'searching', 'joining', 'waiting', 'loading', 'playing'].includes(value.gamePhase) ? value.gamePhase : '' };
+      migration: value.migration === true,
+      matchId: Number.isInteger(value.matchId) && value.matchId >= 0 && value.matchId <= 0xffffffff ? value.matchId : null,
+      checkpointTick: Number.isInteger(value.checkpointTick) && value.checkpointTick >= 0 && value.checkpointTick <= 0x7fffffff ? value.checkpointTick : -1,
+      gamePhase: ['hosting', 'searching', 'joining', 'waiting', 'loading', 'playing', 'migration-failed'].includes(value.gamePhase) ? value.gamePhase : '' };
   }
 
   function publishQuick() { state.quickSequence++; hello(); }
@@ -806,6 +1005,7 @@ const HaloNet = (() => {
     const attempt = state.quick;
     if (!attempt) return;
     state.quick = null;
+    syncPingAuthority();
     clearInterval(attempt.timer);
     attempt.signal?.removeEventListener('abort', attempt.abort);
     if (!attempt.resolved) attempt.reject(new DOMException('Quick play cancelled.', 'AbortError'));
@@ -822,13 +1022,26 @@ const HaloNet = (() => {
     if (state.quick) return state.quick.promise;
     const coordinator = new HaloQuickCoordinator(state.id, state.address, Date.now());
     const attempt = { coordinator, room: state.room, signal, timer: null, resolved: false,
-      previous: JSON.stringify(coordinator.presence), lastStatus: '', abort: cancelQuickPlay, lastResult: null };
+      previous: JSON.stringify(coordinator.presence), lastStatus: '', abort: cancelQuickPlay, lastResult: null,
+      held: false, migrationPending: false, wireEpoch: 0 };
     attempt.promise = new Promise((resolve, reject) => { attempt.resolve = resolve; attempt.reject = reject; });
     state.quick = attempt;
     signal?.addEventListener('abort', attempt.abort, { once: true });
     const tick = () => {
       if (state.quick !== attempt) return;
       const result = coordinator.tick(Date.now(), [...state.peers.values()], state.brokers.some(broker => broker.ready));
+      if (coordinator.epoch !== attempt.wireEpoch) {
+        attempt.wireEpoch = coordinator.epoch;
+        for (const peer of state.peers.values()) peer.nativeStreams?.clear();
+        if (state.shared) {
+          const i32 = words();
+          Atomics.store(i32, field('netOutRead'), Atomics.load(i32, field('netOutWrite')));
+        }
+        if (attempt.resolved) {
+          attempt.held = true;
+          onStatus({ state: 'recovering', message: 'Choosing a replacement host and preserving the match…', hold: true });
+        }
+      }
       const presence = JSON.stringify(coordinator.presence);
       if (presence !== attempt.previous) { attempt.previous = presence; publishQuick(); }
       if (result.error) {
@@ -837,18 +1050,25 @@ const HaloNet = (() => {
         attempt.reject(new Error(result.error));
         cancelQuickPlay();
       } else if (result.result) {
-        const selection = { ...result.result, room: attempt.room };
+        const selection = { ...result.result, room: attempt.room, epoch: coordinator.epoch };
         const signature = JSON.stringify(result.result) + ':' + coordinator.epoch;
         if (signature !== attempt.lastResult) {
           attempt.lastResult = signature;
           if (!attempt.resolved) { attempt.resolved = true; attempt.resolve(selection); }
-          else onFailover(selection);
+          else { attempt.held = true; attempt.migrationPending = true; onFailover(selection); }
+        } else if (attempt.held && !attempt.migrationPending && !coordinator.recovering && coordinator.missingSince === null &&
+            coordinator.presence.gamePhase === 'playing') {
+          attempt.held = false;
+          onStatus({ state: 'playing', message: 'Multiplayer is ready.', hold: false });
         }
         coordinator.recovering = false;
       } else if (result.message !== attempt.lastStatus) {
         attempt.lastStatus = result.message;
+        const hold = attempt.resolved && (coordinator.recovering || result.state === 'reconnecting');
+        if (hold) attempt.held = true;
         onStatus({ state: coordinator.recovering ? 'recovering' : result.state,
-          message: coordinator.recovering ? 'Choosing a replacement host. The match will restart…' : result.message });
+          message: coordinator.recovering ? 'Choosing a replacement host and preserving the match…' : result.message,
+          ...(hold ? { hold: true } : {}) });
       }
     };
     publishQuick();
@@ -865,20 +1085,47 @@ const HaloNet = (() => {
       cancelQuickPlay(); return false;
     }
     if (!state.quick || !state.quick.resolved) return;
+    if (phase === 'migration-failed') {
+      const attempt = state.quick, coordinator = attempt.coordinator;
+      attempt.held = true;
+      attempt.migrationPending = true;
+      coordinator.presence.gamePhase = phase;
+      // A checkpoint from the preceding authority cannot make a failed
+      // reattachment into a healthy host. A later verified transfer and native
+      // playing receipt can restore eligibility without resetting the match.
+      coordinator.presence.checkpointTick = -1;
+      if (coordinator.presence.role === 'host') coordinator.recover(Date.now(), coordinator.epoch);
+      publishQuick();
+      return false;
+    }
     if (!['hosting', 'searching', 'joining', 'waiting', 'loading', 'playing'].includes(phase)) return;
+    if (phase === 'playing') state.quick.migrationPending = false;
     state.quick.coordinator.launched(phase);
     publishQuick();
   }
 
+  function quickPlayCheckpoint({ epoch, tick, matchId }) {
+    if (state.quick?.coordinator.checkpoint(epoch, tick, matchId)) publishQuick();
+  }
+
   function quickPlayLost() {
-    if (!state.quick?.resolved || state.quick.coordinator.result?.role !== 'join') return false;
-    state.quick.coordinator.recover(Date.now());
+    const attempt = state.quick;
+    if (!attempt?.resolved) return false;
+    const coordinator = attempt.coordinator;
+    // Native EOF can arrive after signalling has begun the election, or after
+    // its replacement selection has already been sent to the engine. Consume
+    // those old-session receipts without cancelling the preserved match or
+    // advancing its authority a second time.
+    if (coordinator.hasMatch && (coordinator.recovering || attempt.held || attempt.migrationPending)) return true;
+    if (coordinator.result?.role !== 'join') return false;
+    attempt.held = true;
+    coordinator.recover(Date.now());
     publishQuick();
     return true;
   }
 
   return { attach, join, leave, newRoomCode, on, status, addressText, useTransport,
-    quickPlay, cancelQuickPlay, quickPlayLost, quickPlayPhase, quickPlayStarted: () => quickPlayPhase('loading'),
+    quickPlay, cancelQuickPlay, quickPlayLost, quickPlayPhase, quickPlayCheckpoint, quickPlayStarted: () => quickPlayPhase('loading'),
     get address() { return state.address; } };
 })();
 if (typeof module !== 'undefined') module.exports = { HaloQuickCoordinator };

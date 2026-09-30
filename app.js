@@ -67,7 +67,7 @@ can run the game, copies the game data out of the player's disc image
   // ---------- settings (this browser's; nothing else depends on them)
 
   const coarsePointer = matchMedia('(pointer: coarse)').matches;
-  const settings = { touch: coarsePointer, look: 1.4, vsync: true, glDebug: false, renderHeight: ios || pixelFrames ? 480 : 720 };
+  const settings = { touch: coarsePointer, touchFps: false, look: 1.4, vsync: true, glDebug: false, renderHeight: ios || pixelFrames ? 480 : 720 };
   try {
     Object.assign(settings, JSON.parse(localStorage.getItem('halo-web-settings') || '{}'));
   } catch { /* private browsing: the defaults */ }
@@ -510,24 +510,27 @@ can run the game, copies the game data out of the player's disc image
     quickStatus('waiting', 'Connecting to the room and finding a match…');
     try {
       const selection = await HaloNet.quickPlay({ signal: controller.signal, onStatus(status) {
+        if (controller.signal.aborted) return;
+        if (typeof status.hold === 'boolean') window.Module?._web_quick_play_hold?.(status.hold ? 1 : 0);
         if (!controller.signal.aborted && (!state.started || ['recovering', 'reconnecting', 'error'].includes(status.state)))
           quickStatus(status.state, status.message);
       }, onFailover(selection) {
         if (controller.signal.aborted || state.manualMode || state.invite ||
             !state.started || selection.room !== state.selectedRoom) return;
-        const restart = window.Module?._web_quick_play_restart;
-        if (!restart) {
+        const migrate = window.Module?._web_quick_play_migrate;
+        if (!migrate) {
           quickStatus('error', 'Host recovery needs the latest game build. Reload and choose Update.');
           cancelQuickPlay();
           return;
         }
         state.quickRole = selection.role;
         quickStatus('recovering', selection.role === 'host' ?
-          'You are the replacement host. Restarting the match…' : 'Joining the replacement host. Restarting the match…');
-        restart(selection.role === 'host' ? 1 : 2, selection.hostAddress);
+          'You are the replacement host. Preserving the match…' : 'Reconnecting to the replacement host. Preserving the match…');
+        migrate(selection.role === 'host' ? 1 : 2, selection.hostAddress, selection.epoch);
       } });
       if (controller.signal.aborted || state.manualMode || state.started || state.selectedRoom !== selection.room) return;
       state.quickRole = selection.role;
+      state.quickEpoch = selection.epoch;
       quickStatus(selection.role === 'host' ? 'hosting' : 'joining', selection.role === 'host' ?
         'Starting a match. Keep this game open so others can join.' : 'Joining the room’s match…');
       await play({ role: selection.role, target: selection.hostAddress });
@@ -674,6 +677,14 @@ can run the game, copies the game data out of the player's disc image
       'gatewayPeers', 'gatewayPeerCount'];
     const offsets = {};
     names.forEach((name, index) => { offsets[name] = words[index]; });
+    // Cached older runtimes export only the original 36 offsets. Their shared
+    // size must include the appended table before reading its extra offsets.
+    const pingStart = offsets.gatewayPeers + offsets.gatewayPeerCount * 12;
+    if (offsets.size >= pingStart + 20 + 128 * 8) {
+      const pingNames = ['pingSequence', 'pingHost', 'pingEpoch', 'pingUpdated', 'pingCount', 'pingPeers', 'pingPeerCount'];
+      const pingWords = new Int32Array(state.memory.buffer, pointer + 36 * 4, pingNames.length);
+      pingNames.forEach((name, index) => { offsets[name] = pingWords[index]; });
+    }
     return offsets;
   }
 
@@ -858,13 +869,17 @@ can run the game, copies the game data out of the player's disc image
         else if (kind === 6) {
           try {
             const status = JSON.parse(text);
+            if (status.phase === 'checkpoint') {
+              HaloNet.quickPlayCheckpoint(status);
+              return;
+            }
             if (status.phase === 'disconnected' && !state.invite && !state.manualMode && HaloNet.quickPlayLost()) {
-              quickStatus('recovering', 'The host disconnected. Choosing a replacement host; the match will restart…');
+              quickStatus('recovering', 'The host disconnected. Choosing a replacement host and preserving the match…');
               return;
             }
             const recovering = HaloNet.quickPlayPhase(status.phase);
             if (recovering) {
-              quickStatus('recovering', 'Choosing a replacement host. The match will restart…');
+              quickStatus('recovering', 'Choosing a replacement host and preserving the match…');
               return;
             }
             quickStatus(status.phase, status.message);
@@ -892,6 +907,8 @@ can run the game, copies the game data out of the player's disc image
       onAbort: (what) => fatal('The game stopped: ' + what),
       onRuntimeInitialized: () => {
         const module = window.Module;
+        module._web_quick_play_set_address?.(HaloNet.address);
+        module._web_quick_play_set_epoch?.(state.quickEpoch || 0);
         state.shared = module._web_shared_state();
         state.offsets = readOffsets(module);
         onVisibility();
@@ -903,6 +920,7 @@ can run the game, copies the game data out of the player's disc image
           canvas,
           touchRoot: $('touch'),
           touch: settings.touch,
+          touchFps: settings.touchFps === true,
         });
         HaloInput.setLookSensitivity(settings.look);
         HaloNet.attach({ memory: state.memory, base: state.shared, offsets: state.offsets });
@@ -1234,6 +1252,7 @@ can run the game, copies the game data out of the player's disc image
     document.addEventListener('visibilitychange', onVisibility);
 
     $('opt-touch').checked = settings.touch;
+    $('opt-touch-fps').checked = settings.touchFps === true;
     $('opt-look').value = settings.look;
     $('opt-vsync').checked = settings.vsync;
     $('opt-resolution').value = settings.renderHeight;
@@ -1245,6 +1264,7 @@ can run the game, copies the game data out of the player's disc image
       if (state.shared) updateDisplaySize();
     };
     $('opt-touch').onchange = (event) => { settings.touch = event.target.checked; saveSettings(); };
+    $('opt-touch-fps').onchange = (event) => { settings.touchFps = event.target.checked; saveSettings(); };
     $('opt-look').oninput = (event) => {
       settings.look = parseFloat(event.target.value);
       saveSettings();
