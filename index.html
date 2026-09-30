@@ -57,7 +57,7 @@
 
     <div id="step-data" class="step" hidden>
       <h2>Game data</h2>
-      <p>Browser multiplayer downloads the UI and Blood Gulch first (about 37 MB), then saves them in this browser.
+      <p>Browser multiplayer downloads the UI and Beaver Creek first (about 36 MB), then saves them in this browser.
         Opening the full main menu downloads the remaining maps (about 1.9 GB total). You can also
         choose your Halo: Combat Evolved Xbox disc image (<code>.iso</code> or <code>.xiso</code>).</p>
       <label class="button primary" for="iso-file">Choose disc image…</label>
@@ -77,19 +77,6 @@
       </div>
       <p class="small" id="data-summary"></p>
     </div>
-
-    <section class="online" aria-labelledby="invite-title">
-      <h2 id="invite-title">Join a desktop game</h2>
-      <p class="small">Paste a <code>halo://join/</code> invite from Discord, or open its browser link.</p>
-      <div class="row">
-        <input id="invite-input" type="text" aria-label="Desktop game invite" placeholder="halo://join/…" autocomplete="off" spellcheck="false">
-        <button type="button" class="button" id="invite-connect">Connect</button>
-        <button type="button" class="button" id="invite-share">Copy browser link</button>
-      </div>
-      <p id="invite-status" class="small" role="status" aria-live="polite"></p>
-      <label class="row" id="relay-access-row" hidden>Relay access key
-        <input id="relay-access" type="password" autocomplete="off"></label>
-    </section>
 
     <section class="online" id="browser-rooms" aria-labelledby="online-title">
       <button id="room-close" class="button small-button" type="button" hidden>Back to game</button>
@@ -118,6 +105,12 @@
       <summary>Settings and data</summary>
       <label class="row"><input type="checkbox" id="opt-touch"> Touch controls</label>
       <label class="row">Aim sensitivity <input type="range" id="opt-look" min="0.4" max="3" step="0.1"></label>
+      <label class="row">Render resolution <select id="opt-resolution">
+        <option value="480">480p · lowest memory</option>
+        <option value="720">720p · balanced</option>
+        <option value="1080">1080p · high detail</option>
+        <option value="1440">1440p · highest detail</option>
+      </select></label>
       <label class="row"><input type="checkbox" id="opt-vsync" checked> Wait for the display (smoother, saves battery)</label>
       <label class="row"><input type="checkbox" id="opt-gldebug"> Log graphics errors (for bug reports)</label>
       <p class="small">Online play: a TURN relay, for networks that WebRTC cannot cross directly (some mobile networks).</p>

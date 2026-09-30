@@ -1,5 +1,5 @@
 {
-  "source_commit": "2ff17dd81771325ba2d81616b621f046aaca1373",
+  "source_commit": "ea85ad3c32ff158f041db7d4cf0727cb2ddc3e17",
   "source_dirty": true,
   "runtime": "source-built Emscripten 6.0.10",
   "native_network_version": 4,
@@ -12,28 +12,28 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "app.js": {
-      "bytes": 54991,
-      "sha256": "b36dd80dae7e5b4514b8c84206847dcb846ef9bd36390d9971f1a4368ed6f89d"
+      "bytes": 55914,
+      "sha256": "14ce330d271aa51a036e9b05afde9634bece2a170075053f357a1d65852f26a0"
     },
     "audio-worklet.js": {
       "bytes": 2692,
       "sha256": "89ea63d7b2e39cf2f2b995c781b9879e2caf2d95249e4bfe44ee856341388e49"
     },
     "cache.js": {
-      "bytes": 17744,
-      "sha256": "044aec68dd475d1b795b995130ab0047dbabc344ac08031c3f9f7d4f6358b3dc"
+      "bytes": 18756,
+      "sha256": "53ebaaabd2762c51eb920de01dff2085db2cb3523c7166623136f2eca24268fa"
     },
     "gateway.js": {
       "bytes": 7642,
       "sha256": "0ede373ed1b32dc4b4c0646c70aa96d8546a6cc82732f16a5a018e6ba02e5139"
     },
     "halo.js": {
-      "bytes": 132669,
-      "sha256": "57aa3aa62bfa182d3ebf95c2bbc7f0c0e3563df8f3e4eb27fc8474db8a1b3b6e"
+      "bytes": 133814,
+      "sha256": "7148bacb863876d19783d77de296c69a1d2ada37e2cc7a4c6f384399ccf406de"
     },
     "halo.wasm": {
-      "bytes": 3023749,
-      "sha256": "851770e237688150f9a5826a42658d96a9a9c7a921151598db28e1067c564d9d"
+      "bytes": 3023838,
+      "sha256": "cbf9ee5ff41ffa8028a4017e41a09ea635c70c2d4f50c8f04d50a1a77f22702a"
     },
     "icons/icon-180.png": {
       "bytes": 9214,
@@ -48,8 +48,8 @@
       "sha256": "e9b11b21da4105a1eb8bd2ae88a80505800b3d0240bbfb962c587d44e1ab25c0"
     },
     "index.html": {
-      "bytes": 10953,
-      "sha256": "2f78e80d63171ef17ac065510dddfd5105885b23bcd682803c6eb137ebfe7c3d"
+      "bytes": 10463,
+      "sha256": "b43632d2c28e8fd6b5fc8081365cbfa86f1959784dd8620fddf29b5165ea825b"
     },
     "input.js": {
       "bytes": 18055,
@@ -72,20 +72,28 @@
       "sha256": "f594297800a9ac86aec51b8ff314d89097724a170b8de1ff5320217e8d9e0091"
     },
     "style.css": {
-      "bytes": 15039,
-      "sha256": "149229b567f4c52ee5416a90ed938c3c3a3733d66aa64846ed98b5e92d324e5e"
+      "bytes": 15057,
+      "sha256": "192a4835a935e6bec51f4d85e54d5196e3388d1104e7cad1d2ad77b0dbc3188f"
     },
     "sw.js": {
-      "bytes": 4582,
-      "sha256": "763c7fe52e6021489eca5832634bb0ba638b0d7c4e3bda4e62981163c53d1ffd"
+      "bytes": 4604,
+      "sha256": "10e8a79a7c08be3277c402676f4e69635ed1da9fcb48874f15bd4f0b230a1eee"
+    },
+    "vendor/sha256-LICENSE.txt": {
+      "bytes": 1076,
+      "sha256": "0fea2e0cffe72ee17adc25c42e55daf5c87c6e9cd5b3362ee4213890bda0ee7c"
+    },
+    "vendor/sha256.js": {
+      "bytes": 18769,
+      "sha256": "2db6c8e554fbee14672368a0d7551a8ddd841ee96c91526eb7987a0179cfc717"
     },
     "version.json": {
       "bytes": 31,
-      "sha256": "3d82f9265912a014aeb2a471024e64334630356fe54789c0ebae7e3afb8d0979"
+      "sha256": "0dcf32ed2619371fe887a5481ae0f4090b6e646277cb6c5418656988ef05694b"
     },
     "xiso-worker.js": {
-      "bytes": 7323,
-      "sha256": "511be70417fbb6f1bfc011425a25b32b8a1f6cfad09523938c8336d7a9b410d3"
+      "bytes": 7343,
+      "sha256": "ae9c79b851ef9f9a06bc60d31f7b6dfe19a0c4156d9131b1171f1dcccf4b3ae0"
     }
   },
   "source_dirty_reason": "Preexisting untracked experiments are preserved and excluded from the package. All tracked source changes are committed."
