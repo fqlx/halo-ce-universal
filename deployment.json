@@ -1,5 +1,5 @@
 {
-  "source_commit": "946f0168236e4bf712431a564764b3228084f6b5",
+  "source_commit": "943d270e13debe8435110ca23668af1bd383baa6",
   "source_dirty": false,
   "runtime": "source-built Emscripten 6.0.10",
   "native_network_version": 6,
@@ -64,8 +64,8 @@
       "sha256": "c8aa5f1a99a01dc63e31f90f7ccbdc575558e612ec618976ed464bd3e2a92143"
     },
     "net.js": {
-      "bytes": 60409,
-      "sha256": "ecec33af110c37bafe6a41ea9f83af372fddd8476c6f9327a6c9a657969186d0"
+      "bytes": 60623,
+      "sha256": "1490f9a72bb9b958fa61fda628888e6084e77381b8a7108e75df3cf648ad4187"
     },
     "site-config.js": {
       "bytes": 87,
@@ -89,7 +89,7 @@
     },
     "version.json": {
       "bytes": 31,
-      "sha256": "d5e76f3bfa079fd6f09ee087dc9831cc82fe1dc9f48d857f1e82d9e5cb715bf6"
+      "sha256": "2ddaf2dfdaad83425a6bb5e761c5fe57af03587fef008d68a6b9a9ce8c919b83"
     },
     "xiso-worker.js": {
       "bytes": 7343,
