@@ -98,7 +98,8 @@ struct nv2a_pixel_shader_key
 	unsigned long alpha_test_function;
 	unsigned char fog_enable;
 	unsigned char fog_table_mode;
-	/* inside a visibility test: count the samples that pass (Android) */
+	/* inside a visibility test: count the samples that pass (Android), or
+	mark them in the visibility mask (web) */
 	unsigned char count_samples;
 	unsigned char pad;
 };

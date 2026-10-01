@@ -346,6 +346,22 @@ struct gl_device
 	float query_area[VISIBILITY_TEST_SLOTS];
 	GLuint active_query;
 	BOOL visibility_test_active;
+#ifdef HALO_WEB
+	/* WebGL answers a query only between the browser's tasks, which the
+	game's thread does not return to inside a frame, and the game waits for
+	its answers there. Instead a test draws into a mask that shares the
+	depth target, and the mask is read back and counted when the test ends
+	(D3DDevice_EndVisibilityTest). */
+	GLuint visibility_mask;
+	GLuint visibility_mask_depth;
+	unsigned long visibility_mask_size[2];
+	/* the pixels the test's draws cleared and may cover: corner and size,
+	no size until a draw reaches the mask */
+	GLint visibility_rect[4];
+	unsigned char *visibility_pixels;
+	unsigned long visibility_pixels_size;
+	GLuint visibility_samples[VISIBILITY_TEST_SLOTS];
+#endif
 #ifdef HALO_ANDROID
 	/* with atomic counters: one counter per test, used as a ring; the
 	counter a test ended in, per result slot */
@@ -1376,6 +1392,122 @@ void WINAPI D3DDevice_InsertCallback(D3DCALLBACKTYPE type, D3DCALLBACK callback,
 
 /* ---------- visibility (occlusion) tests */
 
+#ifdef HALO_WEB
+/* sends a visibility test's draw to the mask (struct gl_device): the mask
+shares the depth target and marks every pixel that passes, under the pixels
+the test's first draw can cover, which are cleared first */
+static BOOL visibility_mask_bind(BOOL immediate)
+{
+	struct render_target_entry *depth = render_target_get(device.depth_stencil);
+	const GLint *viewport = gl_state.viewport;
+	GLint rect[4];
+
+	if (!depth || !depth->target.depth)
+		return FALSE;
+	if (!device.visibility_mask)
+		glGenTextures(1, &device.visibility_mask);
+	if (device.visibility_mask_size[0] != depth->target.gl_width ||
+		device.visibility_mask_size[1] != depth->target.gl_height)
+	{
+		device.visibility_mask_size[0] = depth->target.gl_width;
+		device.visibility_mask_size[1] = depth->target.gl_height;
+		glBindTexture(GL_TEXTURE_2D, device.visibility_mask);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)depth->target.gl_width,
+			(GLsizei)depth->target.gl_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		xgpu_gl_state_invalidate();
+	}
+	device.visibility_mask_depth = depth->target.texture;
+	state_framebuffer(framebuffer_get(device.visibility_mask, depth->target.texture));
+	if (gl_state.color_mask != 15)
+	{
+		gl_state.color_mask = 15;
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	}
+	state_enable(&gl_state.blend, GL_BLEND, FALSE);
+	if (device.visibility_rect[2] > 0 && device.visibility_rect[3] > 0)
+		return TRUE;
+
+	/* a lens flare's test is one rectangle, its corners in the viewport's
+	pixels (rasterizer_xbox_widgets.c), widened a pixel against rounding;
+	anything else may cover the whole viewport */
+	memcpy(rect, viewport, sizeof(rect));
+	if (immediate && device.immediate_count)
+	{
+		unsigned long floats = XGPU_VERTEX_ATTRIBUTE_COUNT * 4, vertex;
+		float x0 = device.immediate_vertices[0], x1 = x0;
+		float y0 = device.immediate_vertices[1], y1 = y0;
+		GLint left, top, right, bottom;
+
+		for (vertex = 1; vertex < device.immediate_count; vertex++)
+		{
+			const float *position = device.immediate_vertices + vertex * floats;
+
+			x0 = fminf(x0, position[0]);
+			x1 = fmaxf(x1, position[0]);
+			y0 = fminf(y0, position[1]);
+			y1 = fmaxf(y1, position[1]);
+		}
+		left = target_pixel((float)device.viewport.X + x0 - 1.0f, 0);
+		top = target_pixel((float)device.viewport.Y + y0 - 1.0f, 1);
+		right = target_pixel((float)device.viewport.X + x1 + 1.0f, 0);
+		bottom = target_pixel((float)device.viewport.Y + y1 + 1.0f, 1);
+		if (left < viewport[0])
+			left = viewport[0];
+		if (top < viewport[1])
+			top = viewport[1];
+		if (right > viewport[0] + viewport[2])
+			right = viewport[0] + viewport[2];
+		if (bottom > viewport[1] + viewport[3])
+			bottom = viewport[1] + viewport[3];
+		rect[0] = left;
+		rect[1] = top;
+		rect[2] = right > left ? right - left : 0;
+		rect[3] = bottom > top ? bottom - top : 0;
+	}
+	if (rect[2] <= 0 || rect[3] <= 0)
+		return TRUE;
+	glScissor(rect[0], rect[1], rect[2], rect[3]);
+	state_enable(&gl_state.scissor_test, GL_SCISSOR_TEST, TRUE);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glScissor(gl_state.scissor[0], gl_state.scissor[1], gl_state.scissor[2], gl_state.scissor[3]);
+	memcpy(device.visibility_rect, rect, sizeof(rect));
+	return TRUE;
+}
+
+/* the pixels of the test's target that passed: reading the mask back waits
+for the test's draws, as the Xbox's game waits for the result */
+static GLuint visibility_mask_count(void)
+{
+	unsigned long size = (unsigned long)device.visibility_rect[2] * (unsigned long)device.visibility_rect[3] * 4;
+	unsigned long offset;
+	GLuint samples = 0;
+
+	/* no draw reached the mask: nothing to test against, so visible */
+	if (!device.visibility_mask_depth)
+		return VISIBILITY_ALL_SAMPLES;
+	if (!size)
+		return 0;
+	if (device.visibility_pixels_size < size)
+	{
+		unsigned char *pixels = realloc(device.visibility_pixels, size);
+
+		if (!pixels)
+			return VISIBILITY_ALL_SAMPLES;
+		device.visibility_pixels = pixels;
+		device.visibility_pixels_size = size;
+	}
+	state_framebuffer(framebuffer_get(device.visibility_mask, device.visibility_mask_depth));
+	glReadPixels(device.visibility_rect[0], device.visibility_rect[1], device.visibility_rect[2],
+		device.visibility_rect[3], GL_RGBA, GL_UNSIGNED_BYTE, device.visibility_pixels);
+	for (offset = 0; offset < size; offset += 4)
+		samples += device.visibility_pixels[offset] != 0;
+	return samples;
+}
+
+#endif
+
 void WINAPI D3DDevice_BeginVisibilityTest(void)
 {
 	if (!device.gl_ready || device.visibility_test_active)
@@ -1397,8 +1529,9 @@ void WINAPI D3DDevice_BeginVisibilityTest(void)
 	}
 #endif
 #ifdef HALO_WEB
-	/* WebGL answers queries only between tasks, which the game's thread
-	never returns to: every test passes (D3DDevice_GetVisibilityTestResult) */
+	/* the test's draws go to the mask (visibility_mask_bind) */
+	device.visibility_mask_depth = 0;
+	memset(device.visibility_rect, 0, sizeof(device.visibility_rect));
 	return;
 #endif
 	glBeginQuery(VISIBILITY_QUERY, device.queries[0]);
@@ -1423,6 +1556,8 @@ HRESULT WINAPI D3DDevice_EndVisibilityTest(DWORD index)
 	}
 #endif
 #ifdef HALO_WEB
+	device.query_area[index] = target_scale[0] * target_scale[1];
+	device.visibility_samples[index] = visibility_mask_count();
 	device.query_pending[index] = TRUE;
 	return S_OK;
 #endif
@@ -1449,7 +1584,7 @@ HRESULT WINAPI D3DDevice_EndVisibilityTest(DWORD index)
 	return S_OK;
 }
 
-#ifndef HALO_ANDROID
+#if !defined(HALO_ANDROID) || defined(HALO_WEB)
 /* a count of pixels in the game's pixels */
 static GLuint visibility_unscaled(GLuint samples, DWORD index)
 {
@@ -1497,7 +1632,7 @@ HRESULT WINAPI D3DDevice_GetVisibilityTestResult(DWORD index, UINT *result, ULON
 #endif
 #ifdef HALO_WEB
 	if (result)
-		*result = VISIBILITY_ALL_SAMPLES;
+		*result = visibility_unscaled(device.visibility_samples[index], index);
 	return S_OK;
 #endif
 	glGetQueryObjectuiv(device.queries[index], GL_QUERY_RESULT_AVAILABLE, &available);
@@ -2515,6 +2650,9 @@ static struct program_entry *prepare_draw(BOOL immediate)
 	struct program_entry *entry;
 	struct draw_uniforms uniforms;
 	BOOL has_depth = FALSE;
+#ifdef HALO_WEB
+	BOOL mask;
+#endif
 	int stage;
 
 	if (!device.gl_ready || !program || !device.vertex_shader || !program->instructions)
@@ -2540,6 +2678,9 @@ static struct program_entry *prepare_draw(BOOL immediate)
 		return NULL;
 	}
 	apply_raster_state(has_depth);
+#ifdef HALO_WEB
+	mask = device.visibility_test_active && visibility_mask_bind(immediate);
+#endif
 
 	memset(&key, 0, sizeof(key));
 	memcpy(key.combiner_state, D3D__RenderState, sizeof(key.combiner_state));
@@ -2557,7 +2698,9 @@ static struct program_entry *prepare_draw(BOOL immediate)
 	key.alpha_test_function = D3D__RenderState[D3DRS_ALPHATESTENABLE] ? D3D__RenderState[D3DRS_ALPHAFUNC] : 0;
 	key.fog_enable = D3D__RenderState[D3DRS_FOGENABLE] != 0;
 	key.fog_table_mode = (unsigned char)D3D__RenderState[D3DRS_FOGTABLEMODE];
-#ifdef HALO_ANDROID
+#ifdef HALO_WEB
+	key.count_samples = mask;
+#elif defined(HALO_ANDROID)
 	key.count_samples = device.visibility_test_active && xgpu_capabilities.atomic_counters;
 #endif
 
@@ -2574,7 +2717,7 @@ static struct program_entry *prepare_draw(BOOL immediate)
 	else
 		stats.draws++;
 	state_program(entry->program);
-#ifdef HALO_ANDROID
+#if defined(HALO_ANDROID) && !defined(HALO_WEB)
 	if (key.count_samples)
 		glBindBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, device.visibility_counters,
 			(GLintptr)(device.counter_active * sizeof(GLuint)), sizeof(GLuint));
