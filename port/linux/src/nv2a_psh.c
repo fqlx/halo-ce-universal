@@ -532,6 +532,7 @@ char *nv2a_pixel_shader_to_glsl(const struct nv2a_pixel_shader_key *key)
 
 #ifdef HALO_ANDROID
 	xgpu_text_append(&text, "#version %s\n", xgpu_capabilities.shading_language);
+#ifndef HALO_WEB
 	if (key->count_samples)
 	{
 		/* samples that pass the depth and stencil tests, as the NV2A's
@@ -540,6 +541,7 @@ char *nv2a_pixel_shader_to_glsl(const struct nv2a_pixel_shader_key *key)
 			"layout(early_fragment_tests) in;\n"
 			"layout(binding = 0, offset = 0) uniform atomic_uint visible_samples;\n");
 	}
+#endif
 #endif
 	xgpu_text_append(&text,
 		SHADER_VERSION
@@ -655,7 +657,11 @@ char *nv2a_pixel_shader_to_glsl(const struct nv2a_pixel_shader_key *key)
 		xgpu_text_append(&text, "\tresult = vec4(t0.rgb, 1.0);\n");
 	if (config_boolean("debug.gpu_debug_flat"))
 		xgpu_text_append(&text, "\tresult = xD0.a > 0.0 ? vec4(xD0.rgb, 1.0) : vec4(1.0, 0.0, 1.0, 1.0);\n");
-#ifdef HALO_ANDROID
+#ifdef HALO_WEB
+	/* every sample that passes marks the visibility mask (d3d8_gl.c) */
+	if (key->count_samples)
+		xgpu_text_append(&text, "\tresult = vec4(1.0);\n");
+#elif defined(HALO_ANDROID)
 	if (key->count_samples)
 		xgpu_text_append(&text, "\tatomicCounterIncrement(visible_samples);\n");
 #endif

@@ -13,9 +13,25 @@ this blocking game loop uses a periodic finish instead.
 */
 
 #include <GLES3/gl3.h>
+#include <emscripten/emscripten.h>
+#include <webgl/webgl2.h>
 #include <string.h>
 
 #include "platform.h"
+
+/* The diagnostic HUD runs on the page thread; the renderer reads this at
+the next test boundary. -1 leaves the environment-selected mode intact. */
+static int visibility_readback_override = -1;
+
+EMSCRIPTEN_KEEPALIVE void web_visibility_set_readback_mode(int immediate)
+{
+	__atomic_store_n(&visibility_readback_override, immediate < 0 ? -1 : immediate != 0, __ATOMIC_RELAXED);
+}
+
+int host_gl_visibility_readback_mode(void)
+{
+	return __atomic_load_n(&visibility_readback_override, __ATOMIC_RELAXED);
+}
 
 int host_gl_has_extension(const char *name)
 {
@@ -67,6 +83,13 @@ unsigned int host_gl_read_buffer_word(unsigned int buffer, unsigned int offset)
 void host_gl_buffer_write(unsigned int target, unsigned int offset, unsigned int size, const void *data)
 {
 	glBufferSubData((GLenum)target, (GLintptr)offset, (GLsizeiptr)size, data);
+}
+
+void host_gl_read_buffer(unsigned int target, unsigned int offset, unsigned int size, void *data)
+{
+	/* WebGL 2 supplies this operation even though GLES 3 does not. It is a
+	blocking read: this worker cannot observe newly signaled WebGL fences. */
+	emscripten_glGetBufferSubData((GLenum)target, (GLintptr)offset, (GLsizeiptr)size, data);
 }
 
 void host_gl_fence_frame(unsigned int slot)

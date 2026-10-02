@@ -39,6 +39,11 @@ void host_gl_fence_frame(unsigned int slot);
 void host_gl_wait_frame(unsigned int slot);
 #endif
 
+#ifdef HALO_WEB
+void host_gl_read_buffer(unsigned int target, unsigned int offset, unsigned int size, void *data);
+int host_gl_visibility_readback_mode(void);
+#endif
+
 /* ---------- GL state
 
 The device caches the GL state it sets for draws (d3d8_gl.c); code that
@@ -98,7 +103,8 @@ struct nv2a_pixel_shader_key
 	unsigned long alpha_test_function;
 	unsigned char fog_enable;
 	unsigned char fog_table_mode;
-	/* inside a visibility test: count the samples that pass (Android) */
+	/* inside a visibility test: count the samples that pass (Android), or
+	mark them in the visibility mask (web) */
 	unsigned char count_samples;
 	/* a high-res HUD meter (hud_hires.h) drawn with the meter's blend (the
 	destination kept by the source's alpha): that alpha is eased to 1 by the
