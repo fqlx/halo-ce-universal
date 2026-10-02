@@ -12,16 +12,16 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "app.js": {
-      "bytes": 60883,
-      "sha256": "0dd531d03c64419fb2e6b3362ef59040e654f58c3b8123ff399331d5d104a21f"
+      "bytes": 60252,
+      "sha256": "176009aa68df46a410ccdaf16f8a5dd070cf248e2fc5b17ef7efa47df32a3f5e"
     },
     "audio-worklet.js": {
       "bytes": 2692,
       "sha256": "89ea63d7b2e39cf2f2b995c781b9879e2caf2d95249e4bfe44ee856341388e49"
     },
     "cache.js": {
-      "bytes": 18756,
-      "sha256": "53ebaaabd2762c51eb920de01dff2085db2cb3523c7166623136f2eca24268fa"
+      "bytes": 5538,
+      "sha256": "afe2fd88713626a2e24233e277cea5dd30d1d9d6685645f752a94d75d4ae47e3"
     },
     "gateway.js": {
       "bytes": 7642,
@@ -48,8 +48,8 @@
       "sha256": "e9b11b21da4105a1eb8bd2ae88a80505800b3d0240bbfb962c587d44e1ab25c0"
     },
     "index.html": {
-      "bytes": 10835,
-      "sha256": "4607b2688ee6ff6af219fbb4218f0089a01ca2f9e32abea02270f4fc9249eb83"
+      "bytes": 10747,
+      "sha256": "614823d21a29964f3312589806586004c279b97fa2749814824a6773c5b7d724"
     },
     "input.js": {
       "bytes": 25112,
@@ -88,8 +88,8 @@
       "sha256": "2db6c8e554fbee14672368a0d7551a8ddd841ee96c91526eb7987a0179cfc717"
     },
     "version.json": {
-      "bytes": 31,
-      "sha256": "b7fda5d027c91447d82c39e019d07675b372b62477e5774568894578c19f77ef"
+      "bytes": 34,
+      "sha256": "64073457a2204fd54e884cbe90164fcf5bf3103f1651c6dbe9728cfeee58264a"
     },
     "xiso-worker.js": {
       "bytes": 7343,

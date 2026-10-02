@@ -281,7 +281,7 @@ can run the game, copies the game data out of the player's disc image
       state.pendingInviteConnect = null;
       connect();
     } else if (state.checksReady && state.maps && !state.dataBusy && state.pendingInviteConnect && !state.dataTransition) {
-      downloadMaps();
+      showImportPrompt();
     }
   }
 
@@ -298,31 +298,16 @@ can run the game, copies the game data out of the player's disc image
     state.dataBusy = busy;
     $('iso-file').disabled = busy;
     $('delete-data').disabled = busy;
-    $('download-retry').hidden = busy || !!state.maps;
-    $('download-cancel').hidden = !state.cacheAbort;
+    $('download-retry').hidden = true;
+    $('download-cancel').hidden = true;
     updatePlayButton();
     connectPendingInvite();
     maybeQuickPlay();
   }
 
-  async function downloadMaps() {
-    if (state.dataBusy || state.started) return;
-    state.cacheAbort = new AbortController();
-    setDataBusy(true);
-    try {
-      const maps = await HaloCache.download({ required: requiredMaps(),
-        signal: state.cacheAbort.signal, onProgress: showDownload });
-      showSteps(maps);
-    } catch (error) {
-      log('game data: ' + error.message);
-      if (!state.cacheAbort.signal.aborted && $('download-panel').dataset.state !== 'error') {
-        showDownload({ state: 'error', title: 'Download interrupted', detail: error.message, fraction: 0 });
-      }
-      showSteps(await mapsState());
-    } finally {
-      state.cacheAbort = null;
-      setDataBusy(false);
-    }
+  function showImportPrompt() {
+    $('step-data').hidden = false;
+    $('download-panel').hidden = true;
   }
 
   function extract(file) {
@@ -374,7 +359,7 @@ can run the game, copies the game data out of the player's disc image
       log(`extracted ${result.files} files, ${result.bytes} bytes`);
       $('progress-text').textContent = 'Done.';
       showSteps(await mapsState());
-      if (state.maps) showDownload({ state: 'ready', title: 'Already downloaded',
+      if (state.maps) showDownload({ state: 'ready', title: 'Maps ready',
         detail: downloadedDetail(state.maps), fraction: 1 });
     } catch (error) {
       $('progress-text').textContent = error.message;
@@ -604,8 +589,8 @@ can run the game, copies the game data out of the player's disc image
     updatePlayButton();
     unlockInteraction();
     if (!hasFullMaps()) {
-      // The running engine owns the OPFS game lock. Reload before preparing
-      // more maps, and keep the old page from launching a completed download.
+      // The running engine owns the OPFS game lock. Reload before importing
+      // more maps from the player's disc image.
       state.dataTransition = true;
       state.cacheAbort?.abort();
       const url = new URL(location.href);
@@ -938,7 +923,7 @@ can run the game, copies the game data out of the player's disc image
               cancelQuickPlay();
               if (!hasFullMaps()) {
                 if (status.phase === 'menu') openMainMenu();
-                else fatal(status.message + ' Reload to retry multiplayer, or choose Main menu to download the remaining maps.');
+                else fatal(status.message + ' Reload to retry multiplayer, or choose Main menu and import your disc image for the remaining maps.');
               }
             }
           } catch (error) { log('quick play status: ' + error); }
@@ -1013,7 +998,7 @@ can run the game, copies the game data out of the player's disc image
       }
       if (!hasFullMaps() || state.dataBusy) {
         state.pendingInviteConnect = connect;
-        $('invite-status').textContent = 'Preparing game data. The invite will connect when the download finishes.';
+        $('invite-status').textContent = 'Choose your disc image to import the remaining maps. The invite will connect when they are ready.';
         connectPendingInvite();
         return;
       }
@@ -1355,7 +1340,7 @@ can run the game, copies the game data out of the player's disc image
     }
     $('export-saves').onclick = exportSaves;
     $('delete-data').onclick = deleteData;
-    $('download-retry').onclick = downloadMaps;
+    $('download-retry').onclick = showImportPrompt;
     $('download-cancel').onclick = () => state.cacheAbort?.abort();
     const showLog = async () => {
       $('log-text').textContent = await fullLog();
@@ -1416,11 +1401,11 @@ can run the game, copies the game data out of the player's disc image
     state.checksReady = true;
     showSteps(await mapsState());
     if (state.maps) {
-      showDownload({ state: 'ready', title: 'Already downloaded',
+      showDownload({ state: 'ready', title: 'Maps ready',
         detail: downloadedDetail(state.maps), fraction: 1 });
       setDataBusy(false);
     } else {
-      downloadMaps();
+      showImportPrompt();
     }
   }
 
