@@ -6,8 +6,8 @@
 // Halo's stream allocator writes each range before first use and advances the
 // offset monotonically within the frame; overlapping writes disable the merge.
 // Bounded CPU shadows retain untouched bytes in the persistent triple-buffer ring.
-// Readbacks, texture transfers and buffer mutations outside this pattern flush
-// the queue. Use ?batch_streams=0 to compare with the unmodified GL call path.
+// CPU readbacks, texture transfers and buffer mutations outside this pattern
+// flush the queue. Use ?batch_streams=0 to compare with the unmodified GL call path.
 (() => {
     const commandLimit = 40000;
     const installed = new WeakMap();
@@ -268,6 +268,22 @@
                 gl[name] = (...args) => { flush(); return native[name](...args); };
             }
         }
+        if (native.readPixels) gl.readPixels = (...args) => {
+            const destination = bound(gl.PIXEL_PACK_BUFFER);
+            const bufferTransfer = typeof args[6] === "number" && destination;
+            if (bufferTransfer && !storage.has(destination)) {
+                // The numeric overload writes to GPU storage, including at offset
+                // zero. Keep it ordered with the producing draw and later clears;
+                // getBufferSubData remains a barrier when the CPU consumes it.
+                record("readPixels", args);
+                return;
+            }
+            flush();
+            // An aliased stream buffer must finish pending merges before this
+            // GPU write and lose its stale shadow before later partial uploads.
+            if (bufferTransfer) storage.delete(destination);
+            return native.readPixels(...args);
+        };
         // GPU-side copies bypass our CPU snapshots. Conservatively stop batching
         // that destination until a fresh stream allocation establishes its bytes.
         if (native.copyBufferSubData) gl.copyBufferSubData = (readTarget, writeTarget, ...args) => {

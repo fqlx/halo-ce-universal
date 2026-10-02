@@ -679,12 +679,45 @@ can run the game, copies the game data out of the player's disc image
     output.textContent = 'FPS —';
     output.title = 'Frames received from the game worker';
     output.dataset.samples = '[]';
+    output.dataset.frameTimes = '[]';
+    output.dataset.readbackMode = diagnosticOptions.get('visibility_readback') === 'immediate' ? 'immediate' : 'batched';
+    output.dataset.readbackChanges = '[]';
     document.body.appendChild(output);
+    if (diagnosticOptions.get('visibility_benchmark') === '1') {
+      const controls = document.createElement('div');
+      controls.id = 'visibility-benchmark';
+      controls.style.cssText = 'position:fixed;right:8px;top:8px;z-index:21;' +
+        'padding:6px;background:#11161ddd;font:13px monospace;border-radius:6px';
+      const label = document.createElement('span');
+      label.textContent = `Readback: ${output.dataset.readbackMode} `;
+      controls.appendChild(label);
+      for (const mode of ['batched', 'immediate']) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = `Use ${mode} readback`;
+        button.onclick = (event) => {
+          event.stopPropagation();
+          const setMode = window.Module?._web_visibility_set_readback_mode;
+          if (typeof setMode !== 'function') { label.textContent = 'Readback switch unavailable '; return; }
+          setMode(mode === 'immediate' ? 1 : 0);
+          output.dataset.readbackMode = mode;
+          const changes = JSON.parse(output.dataset.readbackChanges);
+          changes.push({ ms: +performance.now().toFixed(2), mode });
+          output.dataset.readbackChanges = JSON.stringify(changes.slice(-120));
+          label.textContent = `Readback: ${mode} `;
+        };
+        controls.appendChild(button);
+      }
+      document.body.appendChild(controls);
+    }
     const samples = [];
+    const frameTimes = [];
+    let lastPresentTime = null;
     let frames = 0, previousFrames = 0, previousTime = performance.now();
     const resetWindow = () => {
       previousFrames = frames;
       previousTime = performance.now();
+      lastPresentTime = null;
     };
     // Neither hidden time nor queued frames delivered while hidden belong
     // in a visible FPS sample.
@@ -701,11 +734,19 @@ can run the game, copies the game data out of the player's disc image
         windowMs: +windowMs.toFixed(2), width: canvas.width, height: canvas.height });
       if (samples.length > 120) samples.shift();
       output.dataset.samples = JSON.stringify(samples);
+      // Diagnostic-only presentation intervals, bounded to one minute at
+      // 120 Hz. Keep timestamps so a benchmark can exclude loading/cutscenes.
+      if (frameTimes.length > 7200) frameTimes.splice(0, frameTimes.length - 7200);
+      output.dataset.frameTimes = JSON.stringify(frameTimes);
       previousFrames = frames;
       previousTime = now;
     }, 1000);
     return () => {
-      if (!frames) previousTime = performance.now();
+      const now = performance.now();
+      if (!frames) previousTime = now;
+      if (lastPresentTime !== null && now > lastPresentTime)
+        frameTimes.push({ ms: +now.toFixed(2), intervalMs: +(now - lastPresentTime).toFixed(2) });
+      lastPresentTime = now;
       frames++;
     };
   }
@@ -878,6 +919,8 @@ can run the game, copies the game data out of the player's disc image
     }
     if (diagnosticOptions.get('batch_streams') === '0') argumentsList.push('--HALO_WEB_BATCH_STREAMS=0');
     if (diagnosticOptions.get('geometry_cache') === '1') argumentsList.push('--HALO_WEB_GEOMETRY_CACHE=1');
+    if (diagnosticOptions.get('visibility_readback') === 'immediate')
+      argumentsList.push('--HALO_WEB_VISIBILITY_READBACK=immediate');
     if (!settings.vsync) argumentsList.push('--HALO_NO_VSYNC=1');
     if (settings.glDebug) argumentsList.push('--HALO_GL_DEBUG=1');
 

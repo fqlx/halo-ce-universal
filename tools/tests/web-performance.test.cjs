@@ -72,6 +72,7 @@ async function launch(query = '', viewport = {}, initiallyHidden = false) {
     context, timers, hiddenAtAttach,
     resolution(height) { element('opt-resolution').onchange({ target: { value: String(height) } }); },
     output: () => element('body').children.find(child => child.id === 'performance-stats'),
+    benchmarkControls: () => element('body').children.find(child => child.id === 'visibility-benchmark'),
     samples() { return JSON.parse(this.output().dataset.samples); },
     tick(milliseconds = 1000) {
       now += milliseconds;
@@ -142,6 +143,55 @@ test('reference geometry path is opt-in for controlled comparisons', async () =>
     const page = await launch(query);
     assert.equal(page.context.Module.arguments.includes('--HALO_WEB_GEOMETRY_CACHE=1'), query.endsWith('=1'));
   }
+});
+
+test('visibility reference readback is opt-in for matched gameplay comparisons', async () => {
+  for (const query of ['', '?visibility_readback=batched', '?visibility_readback=immediate']) {
+    const page = await launch(query);
+    assert.equal(page.context.Module.arguments.includes('--HALO_WEB_VISIBILITY_READBACK=immediate'),
+      query.endsWith('=immediate'));
+  }
+});
+
+test('frame intervals measure actual presentation and exclude hidden-time gaps', async () => {
+  const page = await launch('?fps=1');
+  page.present(1);
+  page.tick(20);
+  page.present(1);
+  page.tick(30);
+  page.present(1);
+  page.tick(1000);
+  assert.deepEqual(JSON.parse(page.output().dataset.frameTimes), [
+    { ms: 20, intervalMs: 20 }, { ms: 50, intervalMs: 30 },
+  ]);
+  page.visibility(true);
+  page.tick(60000);
+  page.visibility(false);
+  page.present(1);
+  page.tick(25);
+  page.present(1);
+  page.tick(1000);
+  assert.equal(JSON.parse(page.output().dataset.frameTimes).at(-1).intervalMs, 25);
+  assert.equal(JSON.parse(page.output().dataset.frameTimes).length, 3);
+});
+
+test('live readback switching is diagnostic-only and records mode boundaries', async () => {
+  const regular = await launch('?fps=1');
+  assert.equal(regular.benchmarkControls(), undefined);
+  const page = await launch('?fps=1&visibility_benchmark=1');
+  const modes = [];
+  page.context.Module._web_visibility_set_readback_mode = mode => modes.push(mode);
+  const controls = page.benchmarkControls();
+  page.tick(1000);
+  controls.children[2].onclick({ stopPropagation() {} });
+  assert.equal(page.output().dataset.readbackMode, 'immediate');
+  page.tick(1000);
+  controls.children[1].onclick({ stopPropagation() {} });
+  assert.equal(page.output().dataset.readbackMode, 'batched');
+  assert.deepEqual(modes, [1, 0]);
+  assert.deepEqual(JSON.parse(page.output().dataset.readbackChanges), [
+    { ms: 1000, mode: 'immediate' }, { ms: 2000, mode: 'batched' },
+  ]);
 });
 
 test('Chrome on Mac negotiates pixel frames; other desktops default to 720p', async () => {

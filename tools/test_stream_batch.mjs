@@ -13,7 +13,8 @@ class MockGL {
     constructor() {
         Object.assign(this, { ARRAY_BUFFER: 34962, ELEMENT_ARRAY_BUFFER: 34963, STREAM_DRAW: 35040,
             DYNAMIC_DRAW: 35048, FLOAT: 5126, UNSIGNED_BYTE: 5121, UNSIGNED_SHORT: 5123,
-            TRIANGLES: 4, COLOR: 6144, COPY_READ_BUFFER: 36662, COPY_WRITE_BUFFER: 36663, FRAMEBUFFER: 36160, DRAW_FRAMEBUFFER: 36009, READ_FRAMEBUFFER: 36008, TRANSFORM_FEEDBACK_BUFFER: 35982, COLOR_BUFFER_BIT: 16384, NEAREST: 9728 });
+            TRIANGLES: 4, COLOR: 6144, RGBA: 6408, PIXEL_PACK_BUFFER: 35051, STREAM_READ: 35041,
+            COPY_READ_BUFFER: 36662, COPY_WRITE_BUFFER: 36663, FRAMEBUFFER: 36160, DRAW_FRAMEBUFFER: 36009, READ_FRAMEBUFFER: 36008, TRANSFORM_FEEDBACK_BUFFER: 35982, COLOR_BUFFER_BIT: 16384, NEAREST: 9728 });
         this.bindings = new Map();
         this.arrays = new Map([[null, { element: null, attributes: new Map() }]]);
         this.vao = null;
@@ -26,6 +27,7 @@ class MockGL {
         this.submissions = [];
         this.feedback = null;
         this.feedbackActive = false;
+        this.pixel = 0;
     }
     createBuffer() { return { bytes: new Uint8Array(0) }; }
     createFramebuffer() { return {}; }
@@ -71,6 +73,7 @@ class MockGL {
     capture(indices) {
         const attribute = this.arrays.get(this.vao).attributes.get(0);
         this.draws.push({ vertices: indices.map(i => attribute.buffer.bytes[attribute.offset + i * attribute.stride]), color: this.color.slice() });
+        this.pixel = this.draws.at(-1).vertices[0];
         this.trace.push("draw");
         if (this.feedbackActive) this.feedback.buffer.bytes[this.feedback.offset] = 88;
     }
@@ -79,6 +82,19 @@ class MockGL {
         destination.set(buffer.bytes.subarray(offset, offset + destination.byteLength));
         this.trace.push("read");
     }
+    readPixels(x, y, width, height, format, type, destination, offset = 0) {
+        const pixels = new Uint8Array(width * height * 4).fill(this.pixel);
+        if (typeof destination === "number") {
+            const buffer = this.bindings.get(this.PIXEL_PACK_BUFFER);
+            if (!buffer) { this.trace.push("invalid-pixel-pack"); return; }
+            buffer.bytes.set(pixels, destination);
+            this.trace.push("pixel-pack");
+        } else {
+            destination.set(pixels, offset);
+            this.trace.push("pixel-read");
+        }
+    }
+    clear(mask) { if (mask & this.COLOR_BUFFER_BIT) this.pixel = 0; this.trace.push("clear"); }
     copyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size) {
         this.bindings.get(writeTarget).bytes.set(this.bindings.get(readTarget).bytes.slice(readOffset, readOffset + size), writeOffset);
     }
@@ -148,6 +164,87 @@ compare("readbacks observe all prior writes before later mutations", gl => {
     const read = new Uint8Array(3); gl.getBufferSubData(gl.ARRAY_BUFFER, 0, read); assert.deepEqual(Array.from(read), [1, 2, 3]);
     gl.bufferSubData(gl.ARRAY_BUFFER, 4, new Uint8Array([4, 5, 6])); gl.drawArrays(gl.TRIANGLES, 0, 3);
 });
+
+for (const offset of [0, 4]) {
+    const { gl, frame } = environment(true);
+    vertexBuffer(gl); frame();
+    const pack = gl.createBuffer();
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, pack);
+    gl.bufferData(gl.PIXEL_PACK_BUFFER, 8, gl.STREAM_READ);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Uint8Array([11, 12, 13]));
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, offset);
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 4, new Uint8Array([21, 22, 23]));
+    gl.vertexAttribPointer(0, 1, gl.UNSIGNED_BYTE, false, 1, 4);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    assert.deepEqual(gl.trace, [], "GPU-only pixel transfers must retain the pending batch");
+    frame();
+    assert.deepEqual(gl.trace, ["draw", "pixel-pack", "clear", "draw"], "readPixels must precede the mask clear and use its recorded binding");
+    assert.deepEqual(Array.from(pack.bytes), offset === 0 ? [11, 11, 11, 11, 0, 0, 0, 0] : [0, 0, 0, 0, 11, 11, 11, 11]);
+    assert.equal(gl.uploads, 1, "dedicated pixel-pack transfers must preserve append merging across the read");
+}
+process.stdout.write("PASS pixel-pack offsets, including zero, retain draw/read/clear order and batching\n");
+
+{
+    const { gl, frame } = environment(true);
+    vertexBuffer(gl);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Uint8Array([31, 32, 33]));
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    const pixels = new Uint8Array(6);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels, 1);
+    assert.deepEqual(Array.from(pixels), [0, 31, 31, 31, 31, 0], "CPU pixels must be available before readPixels returns");
+    assert.deepEqual(gl.trace, ["draw", "pixel-read"]);
+    gl.clear(gl.COLOR_BUFFER_BIT); frame();
+    assert.deepEqual(gl.trace, ["draw", "pixel-read", "clear"]);
+}
+process.stdout.write("PASS typed-array readPixels remains an immediate CPU barrier\n");
+
+{
+    const { gl } = environment(true);
+    vertexBuffer(gl);
+    const pack = gl.createBuffer();
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, pack);
+    gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Uint8Array([41, 42, 43]));
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    assert.deepEqual(gl.trace, []);
+    const pixels = new Uint8Array(4);
+    gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels);
+    assert.deepEqual(Array.from(pixels), [41, 41, 41, 41]);
+    assert.deepEqual(gl.trace, ["draw", "pixel-pack", "clear", "read"], "CPU consumption must replay the pending transfer first");
+}
+process.stdout.write("PASS getBufferSubData flushes queued pixel-pack transfers\n");
+
+compare("pixel-pack aliases flush pending stream merges and invalidate CPU shadows", (gl, frame) => {
+    const vertices = vertexBuffer(gl);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Uint8Array([10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120])); frame();
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Uint8Array([1]));
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, vertices);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, 8);
+    assert.deepEqual(gl.trace, ["draw", "pixel-pack"], "an aliased GPU write must separate pending merge groups");
+    gl.bufferSubData(gl.ARRAY_BUFFER, 8, new Uint8Array([9]));
+    gl.vertexAttribPointer(0, 1, gl.UNSIGNED_BYTE, false, 1, 6); gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 10, new Uint8Array([11]));
+    gl.vertexAttribPointer(0, 1, gl.UNSIGNED_BYTE, false, 1, 8); gl.drawArrays(gl.TRIANGLES, 0, 3);
+}, (original, batched) => {
+    assert.deepEqual(batched.draws.at(-1).vertices, [9, 1, 11], "partial uploads must preserve GPU-written gaps");
+    assert.equal(batched.uploads, original.uploads, "an invalidated stream cannot merge uploads until reallocated");
+});
+
+{
+    const { gl } = environment(true);
+    vertexBuffer(gl);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Uint8Array([51, 52, 53]));
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+    assert.deepEqual(gl.trace, ["draw", "invalid-pixel-pack"], "a numeric offset without a pack buffer must retain the native validation barrier");
+}
+process.stdout.write("PASS numeric readPixels without a pixel-pack binding remains a barrier\n");
 
 compare("existing bytes between later appends survive frame boundaries", (gl, frame) => {
     vertexBuffer(gl);

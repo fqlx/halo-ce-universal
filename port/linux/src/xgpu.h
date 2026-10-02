@@ -39,6 +39,11 @@ void host_gl_fence_frame(unsigned int slot);
 void host_gl_wait_frame(unsigned int slot);
 #endif
 
+#ifdef HALO_WEB
+void host_gl_read_buffer(unsigned int target, unsigned int offset, unsigned int size, void *data);
+int host_gl_visibility_readback_mode(void);
+#endif
+
 /* ---------- GL state
 
 The device caches the GL state it sets for draws (d3d8_gl.c); code that
